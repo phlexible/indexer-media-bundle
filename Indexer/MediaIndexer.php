@@ -14,6 +14,9 @@ use Phlexible\IndexerComponent\Document\DocumentInterface;
 use Phlexible\IndexerComponent\Indexer\AbstractIndexer;
 use Phlexible\IndexerComponent\Storage\StorageInterface;
 use Phlexible\IndexerMediaComponent\Event\MapDocumentEvent;
+use Phlexible\MediaAssetComponent\Asset;
+use Phlexible\MediaAssetComponent\AssetManager;
+use Phlexible\MediaAssetComponent\ContentExtractor\ContentExtractorInterface;
 use Phlexible\MediaSiteComponent\File\FileInterface;
 use Phlexible\MediaSiteComponent\Folder\FolderInterface;
 use Phlexible\MediaSiteComponent\Site\SiteInterface;
@@ -37,19 +40,29 @@ class MediaIndexer extends AbstractIndexer
     protected $dispatcher;
 
     /**
+     * @var StorageInterface
+     */
+    protected $storage;
+
+    /**
      * @var DocumentFactory
      */
     protected $documentFactory;
 
     /**
-     * @var SiteManager
+     * @var AssetManager
      */
-    protected $mediaSiteManager;
+    protected $assetManager;
 
     /**
-     * @var StorageInterface
+     * @var ContentExtractorInterface
      */
-    protected $storage;
+    protected $contentExtractor;
+
+    /**
+     * @var SiteManager
+     */
+    protected $siteManager;
 
     /**
      * @var string
@@ -57,23 +70,29 @@ class MediaIndexer extends AbstractIndexer
     protected $defaultLanguage;
 
     /**
-     * @param EventDispatcher  $dispatcher
-     * @param DocumentFactory  $documentFactory
-     * @param SiteManager      $mediaSiteManager
-     * @param StorageInterface $storage
-     * @param string           $defaultLanguage
+     * @param EventDispatcher           $dispatcher
+     * @param StorageInterface          $storage
+     * @param DocumentFactory           $documentFactory
+     * @param AssetManager              $assetManager
+     * @param ContentExtractorInterface $contentExtractor
+     * @param SiteManager               $siteManager
+     * @param string                    $defaultLanguage
      */
     public function __construct(EventDispatcher $dispatcher,
-                                DocumentFactory $documentFactory,
-                                SiteManager $mediaSiteManager,
                                 StorageInterface $storage,
+                                DocumentFactory $documentFactory,
+                                AssetManager $assetManager,
+                                ContentExtractorInterface $contentExtractor,
+                                SiteManager $siteManager,
                                 $defaultLanguage)
     {
-        $this->dispatcher       = $dispatcher;
-        $this->documentFactory  = $documentFactory;
-        $this->mediaSiteManager = $mediaSiteManager;
-        $this->storage          = $storage;
-        $this->defaultLanguage  = $defaultLanguage;
+        $this->dispatcher = $dispatcher;
+        $this->storage = $storage;
+        $this->documentFactory = $documentFactory;
+        $this->assetManager = $assetManager;
+        $this->contentExtractor = $contentExtractor;
+        $this->siteManager = $siteManager;
+        $this->defaultLanguage = $defaultLanguage;
     }
 
     /**
@@ -105,7 +124,7 @@ class MediaIndexer extends AbstractIndexer
      */
     public function getDocumentClass()
     {
-        return 'MWF_Core_Indexer_Document';
+        return 'Phlexible\IndexerMediaComponent\Document\MediaDocument';
     }
 
     /**
@@ -123,19 +142,19 @@ class MediaIndexer extends AbstractIndexer
     {
         $indexIdentifiers = array();
 
-        $mediaSites = $this->mediaSiteManager->getAll();
+        $sites = $this->siteManager->getAll();
 
-        foreach ($mediaSites as $mediaSite)
+        foreach ($sites as $site)
         {
-            /* @var $mediaSite SiteInterface */
+            /* @var $site SiteInterface */
 
-            $rii = new \RecursiveIteratorIterator($mediaSite->getIterator(), \RecursiveIteratorIterator::SELF_FIRST);
+            $rii = new \RecursiveIteratorIterator($site->getIterator(), \RecursiveIteratorIterator::SELF_FIRST);
 
             foreach ($rii as $folder)
             {
                 /* @var $folder FolderInterface */
 
-                $files = $folder->getFiles();
+                $files = $site->findFilesByFolder($folder);
 
                 foreach ($files as $file)
                 {
@@ -163,11 +182,11 @@ class MediaIndexer extends AbstractIndexer
         list($prefix, $fileId, $fileVersion) = explode('_', $id);
 
         // get file object
-        $mediaSite = $this->mediaSiteManager->getByFileId($fileId);
-        $filePeer  = $mediaSite->getFilePeer();
-        $file      = $filePeer->getByID($fileId, $fileVersion);
+        $site = $this->siteManager->getByFileId($fileId);
+        $file = $site->findFile($fileId);
+        $folder = $site->findFolder($file->getFolderId());
 
-        $document = $this->_mapFileToDocument($file, $id);
+        $document = $this->mapFileToDocument($file, $folder, $site, $id);
 
         return $document;
     }
@@ -175,20 +194,22 @@ class MediaIndexer extends AbstractIndexer
     /**
      * Create document and fill it with values.
      *
-     * @param FileInterface $file
-     * @param integer       $id
+     * @param FileInterface   $file
+     * @param FolderInterface $folder
+     * @param SiteInterface   $site
+     * @param integer         $id
      * @return DocumentInterface
      */
-    private function _mapFileToDocument(FileInterface $file, $id)
+    private function mapFileToDocument(FileInterface $file, FolderInterface $folder, SiteInterface $site, $id)
     {
         // TODO do we need boosting?
 
         // extract content
-        $asset   = $file->getAsset();
+        $asset   = $this->assetManager->find($file);
         $content = $this->extractContent($asset);
 
         // Field: mediatype
-        $assetType = preg_replace('/[^\w]/u', '', strtolower($file->getAssetType()));
+        $assetType = preg_replace('/[^\w]/u', '', strtolower($asset->getDocumenttype()->getType()));
 
         // Field: readablefilesize
         $readableFileSize = \Brainbits_Format_Filesize::format($file->getSize());
@@ -199,12 +220,15 @@ class MediaIndexer extends AbstractIndexer
         // Field: Parent Folder IDs
         
         $parentFolderIds = array();
-        $parentFolder 	 = $file->getFolder();
-               
-        while ($parentFolder !== null)
+        $parentFolder  = $folder;
+
+        while ($parentFolder)
         {
-        	$parentFolderIds[] = $parentFolder->getID();
-        	$parentFolder = $parentFolder->getParent();
+        	$parentFolderIds[] = $parentFolder->getId();
+            if (!$parentFolder->getParentId()) {
+                break;
+            }
+        	$parentFolder = $site->findFolder($parentFolder->getParentId());
         }
         
         $tags = '';
@@ -223,7 +247,7 @@ class MediaIndexer extends AbstractIndexer
             ->setValue('url', $url)
             ->setValue('mime_type', $file->getMimeType())
             ->setValue('asset_type', $assetType)
-            ->setValue('document_type', $file->getDocumentTypeKey())
+            ->setValue('document_type', $asset->getDocumenttype()->getKey())
             ->setValue('filesize', $file->getSize())
             ->setValue('readable_filesize', $readableFileSize)
             ->setValue('content', $content);
@@ -232,6 +256,7 @@ class MediaIndexer extends AbstractIndexer
         $metaLanguage = $this->_getMetaLanguage($asset);
         $meta         = $asset->getMeta($metaLanguage);
 
+        /*
         foreach ($meta as $metaKey => $metaField)
         {
             $metaFieldType  = $metaField['type'];
@@ -259,22 +284,28 @@ class MediaIndexer extends AbstractIndexer
                 }
             }
         }
+        */
 
         $event = new MapDocumentEvent($document, $file);
-        $this->dispatcher->postNotification($event);
+        $this->dispatcher->dispatch($event);
 
         return $document;
     }
 
     /**
-     * Extract content from asset type.
+     * Extract content from asset.
      *
-     * @param Media_Asset_Interface $asset
+     * @param Asset $asset
+     * @return string
      */
-    private function extractContent(Media_Asset_Interface $asset)
+    private function extractContent(Asset $asset)
     {
         // parse content
-        $content = $asset->getContent();
+        $content = trim((string)$this->contentExtractor->extract($asset));
+
+        if (!$content) {
+            return null;
+        }
 
         // Remove NL, CR, TABs
         $content = str_replace(array("\r", "\n", "\t"), ' ', $content);
@@ -288,7 +319,7 @@ class MediaIndexer extends AbstractIndexer
         return $content;
     }
 
-    private function _getMetaLanguage(Media_Asset_Abstract $asset)
+    private function _getMetaLanguage(Asset $asset)
     {
         // use meta default language as fallback
         $metaLanguage = $this->defaultLanguage;

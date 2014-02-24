@@ -1,7 +1,14 @@
 services:
     indexerMediaIndexer:
         class: Phlexible\IndexerMediaComponent\Indexer\MediaIndexer
-        arguments: ["@dispatcher", "@indexerDocumentFactory", "@mediaSiteManager", "@indexerMediaStorage", "%metasets.languages.default%"]
+        arguments:
+            - "@dispatcher"
+            - "@indexerMediaStorage"
+            - "@indexerDocumentFactory"
+            - "@mediaAssetManager"
+            - "@mediaAssetContentExtractor"
+            - "@mediaSiteManager"
+            - "%metasets.languages.default%"
         tags:
             - ["indexer.indexer"]
 
