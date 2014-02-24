@@ -10,7 +10,6 @@
     "require": {
         "php": ">=5.3.0",
         "phlexible/indexer-component": "*",
-        "phlexible/media-site-component": "*",
         "phlexible/media": "*"
     },
     "repositories": [
