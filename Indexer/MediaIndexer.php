@@ -1,23 +1,30 @@
 <?php
 /**
- * Phlexible
+ * phlexible
  *
- * PHP Version 5
- *
- * @category    Media
- * @package     Media_IndexerMedia
- * @copyright   2010 brainbits GmbH (http://www.brainbits.net)
+ * @copyright 2007-2013 brainbits GmbH (http://www.brainbits.net)
+ * @license   proprietary
  */
 
+namespace Phlexible\IndexerMediaComponent\Indexer;
+
+use Phlexible\Event\EventDispatcher;
+use Phlexible\IndexerComponent\Document\DocumentFactory;
+use Phlexible\IndexerComponent\Document\DocumentInterface;
+use Phlexible\IndexerComponent\Indexer\AbstractIndexer;
+use Phlexible\IndexerComponent\Storage\StorageInterface;
+use Phlexible\IndexerMediaComponent\Event\MapDocumentEvent;
+use Phlexible\MediaSiteComponent\File\FileInterface;
+use Phlexible\MediaSiteComponent\Folder\FolderInterface;
+use Phlexible\MediaSiteComponent\Site\SiteInterface;
+use Phlexible\MediaSiteComponent\Site\SiteManager;
+
 /**
- * Media Indexer
+ * Media indexer
  *
- * @category    Media
- * @package     Media_IndexerMedia
- * @author      Phillip Look <pl@brainbits.net>
- * @copyright   2010 brainbits GmbH (http://www.brainbits.net)
+ * @author Phillip Look <pl@brainbits.net>
  */
-class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
+class MediaIndexer extends AbstractIndexer
 {
     /**
      * @var string
@@ -25,19 +32,24 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
     const DOCUMENT_TYPE = 'media';
     
     /**
-     * @var Brainbits_Event_Dispatcher
+     * @var EventDispatcher
      */
     protected $dispatcher;
 
     /**
-     * @var MWF_Core_Indexer_Document_Factory
+     * @var DocumentFactory
      */
     protected $documentFactory;
 
     /**
-     * @var Media_Site_Manager
+     * @var SiteManager
      */
     protected $mediaSiteManager;
+
+    /**
+     * @var StorageInterface
+     */
+    protected $storage;
 
     /**
      * @var string
@@ -45,33 +57,51 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
     protected $defaultLanguage;
 
     /**
-     * @var string
+     * @param EventDispatcher  $dispatcher
+     * @param DocumentFactory  $documentFactory
+     * @param SiteManager      $mediaSiteManager
+     * @param StorageInterface $storage
+     * @param string           $defaultLanguage
      */
-    protected $_label = 'Indexer for Media';
-
-    /**
-     * Constructor
-     *
-     * @param Brainbits_Event_Dispatcher        $dispatcher
-     * @param MWF_Core_Indexer_Document_Factory $documentFactory
-     * @param Media_Site_Manager                $mediaSiteManager
-     * @param string                            $defaultLanguage
-     */
-    public function __construct(Brainbits_Event_Dispatcher $dispatcher,
-                                MWF_Core_Indexer_Document_Factory $documentFactory,
-                                Media_Site_Manager $mediaSiteManager,
+    public function __construct(EventDispatcher $dispatcher,
+                                DocumentFactory $documentFactory,
+                                SiteManager $mediaSiteManager,
+                                StorageInterface $storage,
                                 $defaultLanguage)
     {
         $this->dispatcher       = $dispatcher;
         $this->documentFactory  = $documentFactory;
         $this->mediaSiteManager = $mediaSiteManager;
+        $this->storage          = $storage;
         $this->defaultLanguage  = $defaultLanguage;
     }
 
     /**
-     * Return document class
-     *
-     * @return string
+     * @inheritDoc
+     */
+    public function getLabel()
+    {
+        return 'Media indexer';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getStorage()
+    {
+        return $this->storage;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getDocumentFactory()
+    {
+        return $this->documentFactory;
+    }
+
+    /**
+     * @inheritDoc
      */
     public function getDocumentClass()
     {
@@ -79,9 +109,7 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
     }
 
     /**
-     * Return document type
-     *
-     * @return string
+     * @inheritDoc
      */
     public function getDocumentType()
     {
@@ -89,9 +117,7 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
     }
 
     /**
-     * Return all identifiers
-     *
-     * @return array
+     * @inheritDoc
      */
     public function getAllIdentifiers()
     {
@@ -101,19 +127,19 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
 
         foreach ($mediaSites as $mediaSite)
         {
-            /* @var $mediaSite Media_Site_Abstract */
+            /* @var $mediaSite SiteInterface */
 
-            $rii = new RecursiveIteratorIterator($mediaSite->getIterator(), RecursiveIteratorIterator::SELF_FIRST);
+            $rii = new \RecursiveIteratorIterator($mediaSite->getIterator(), \RecursiveIteratorIterator::SELF_FIRST);
 
             foreach ($rii as $folder)
             {
-                /* @var $folder Media_Site_Folder_Abstract */
+                /* @var $folder FolderInterface */
 
                 $files = $folder->getFiles();
 
                 foreach ($files as $file)
                 {
-                    /* @var $file Media_Site_File_Abstract */
+                    /* @var $file FileInterface */
 
                     $fileId = $file->getId();
                     $fileVersion = $file->getVersion();
@@ -129,9 +155,7 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
     }
 
     /**
-     * Get document by identifier
-     *
-     * @return MWF_Core_Indexer_Document
+     * @inheritDoc
      */
     public function getDocumentByIdentifier($id)
     {
@@ -151,12 +175,11 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
     /**
      * Create document and fill it with values.
      *
-     * @param Media_Site_File_Abstract $file
-     * @param integer                  $id
-     *
-     * @return MWF_Core_Indexer_Document
+     * @param FileInterface $file
+     * @param integer       $id
+     * @return DocumentInterface
      */
-    protected function _mapFileToDocument(Media_Site_File_Abstract $file, $id)
+    private function _mapFileToDocument(FileInterface $file, $id)
     {
         // TODO do we need boosting?
 
@@ -168,7 +191,7 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
         $assetType = preg_replace('/[^\w]/u', '', strtolower($file->getAssetType()));
 
         // Field: readablefilesize
-        $readableFileSize = Brainbits_Format_Filesize::format($file->getSize());
+        $readableFileSize = \Brainbits_Format_Filesize::format($file->getSize());
 
         // Field: url
         $url = '/download/' . $file->getId() . '/' . $file->getName();
@@ -237,7 +260,7 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
             }
         }
 
-        $event = new Media_IndexerMedia_Event_MapDocument($document, $file);
+        $event = new MapDocumentEvent($document, $file);
         $this->dispatcher->postNotification($event);
 
         return $document;
@@ -248,7 +271,7 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
      *
      * @param Media_Asset_Interface $asset
      */
-    public function extractContent(Media_Asset_Interface $asset)
+    private function extractContent(Media_Asset_Interface $asset)
     {
         // parse content
         $content = $asset->getContent();
@@ -265,7 +288,7 @@ class Media_IndexerMedia_Indexer extends MWF_Core_Indexer_Indexer_Abstract
         return $content;
     }
 
-    protected function _getMetaLanguage(Media_Asset_Abstract $asset)
+    private function _getMetaLanguage(Media_Asset_Abstract $asset)
     {
         // use meta default language as fallback
         $metaLanguage = $this->defaultLanguage;

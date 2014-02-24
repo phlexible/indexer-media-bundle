@@ -1,0 +1,46 @@
+services:
+    indexerMediaIndexer:
+        class: Phlexible\IndexerMediaComponent\Indexer\MediaIndexer
+        arguments: ["@dispatcher", "@indexerDocumentFactory", "@mediaSiteManager", "@indexerMediaStorage", "%metasets.languages.default%"]
+        tags:
+            - ["indexer.indexer"]
+
+    indexerMediaBoost:
+        class: Phlexible\IndexerMediaComponent\Boost\Boost
+
+    indexerMediaQuery:
+        class: Phlexible\IndexerMediaComponent\Query\MediaQuery
+        arguments: ["@indexerQueryParser", "@indexerMediaBoost"]
+        tags:
+            - ["indexer.search"]
+
+    # listeners
+    indexerMediaListenerImportFile:
+        class: Phlexible\IndexerMediaComponent\Listener\FileListener
+        tags:
+            - ["event.listener", {event: media_site.import_file, method: onImportFile}]
+
+    indexerMediaListenerReplaceFile:
+        class: Phlexible\IndexerMediaComponent\Listener\FileListener
+        tags:
+            - ["event.listener", {event: media_site.replace_file, method: onReplaceFile}]
+
+    indexerMediaListenerMoveFile:
+        class: Phlexible\IndexerMediaComponent\Listener\FileListener
+        tags:
+            - ["event.listener", {event: media_site.move_file, method: onMoveFile}]
+
+    indexerMediaListenerDeleteFile:
+        class: Phlexible\IndexerMediaComponent\Listener\DeleteFileListener
+        tags:
+            - ["event.listener", {event: media_site.delete_file, method: onDeleteFile}]
+
+    indexerMediaListenerSaveMeta:
+        class: Phlexible\IndexerMediaComponent\Listener\DeleteFileListener
+        tags:
+            - ["event.listener", {event: media_manager.save_meta, method: onSaveMeta}]
+
+    indexerMediaListenerCreateDocument:
+        class: Phlexible\IndexerMediaComponent\Listener\CreateDocumentListener
+        tags:
+            - ["event.listener", {event: indexer.create_document, method: onCreateDocument}]
