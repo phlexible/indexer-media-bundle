@@ -33,7 +33,7 @@ class MediaIndexer extends AbstractIndexer
      * @var string
      */
     const DOCUMENT_TYPE = 'media';
-    
+
     /**
      * @var EventDispatcher
      */
@@ -96,7 +96,7 @@ class MediaIndexer extends AbstractIndexer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getLabel()
     {
@@ -104,7 +104,7 @@ class MediaIndexer extends AbstractIndexer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getStorage()
     {
@@ -112,7 +112,7 @@ class MediaIndexer extends AbstractIndexer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getDocumentFactory()
     {
@@ -120,7 +120,7 @@ class MediaIndexer extends AbstractIndexer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getDocumentClass()
     {
@@ -128,7 +128,7 @@ class MediaIndexer extends AbstractIndexer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getDocumentType()
     {
@@ -136,7 +136,7 @@ class MediaIndexer extends AbstractIndexer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getAllIdentifiers()
     {
@@ -174,7 +174,7 @@ class MediaIndexer extends AbstractIndexer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getDocumentByIdentifier($id)
     {
@@ -218,7 +218,7 @@ class MediaIndexer extends AbstractIndexer
         $url = '/download/' . $file->getId() . '/' . $file->getName();
 
         // Field: Parent Folder IDs
-        
+
         $parentFolderIds = array();
         $parentFolder  = $folder;
 
@@ -230,11 +230,11 @@ class MediaIndexer extends AbstractIndexer
             }
         	$parentFolder = $site->findFolder($parentFolder->getParentId());
         }
-        
+
         $tags = '';
 
         $document = $this->createDocument();
-        
+
         $document
             ->setIdentifier($id)
             ->setValue('title', $file->getName())
