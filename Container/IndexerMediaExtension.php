@@ -28,6 +28,6 @@ class IndexerMediaExtension extends Extension
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../_config'));
         $loader->load('services.yml');
 
-        $container->setAlias('indexerMediaStorage', 'indexerStorageElastica');
+        $container->setAlias('indexerMediaStorage', 'indexerStorageDefault');
     }
 }

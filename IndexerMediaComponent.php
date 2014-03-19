@@ -8,14 +8,14 @@
 
 namespace Phlexible\IndexerMediaComponent;
 
-use Phlexible\Component\AbstractComponent;
+use Phlexible\Component\Component;
 
 /**
  * Media indexer component
  *
  * @package Media_IndexerMedia
  */
-class IndexerMediaComponent extends AbstractComponent
+class IndexerMediaComponent extends Component
 {
     public function __construct()
     {
