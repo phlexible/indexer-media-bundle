@@ -8,10 +8,9 @@
 
 namespace Phlexible\IndexerMediaComponent\Event;
 
-use Phlexible\Event\Event;
 use Phlexible\IndexerComponent\Document\DocumentInterface;
-use Phlexible\IndexerMediaComponent\Events;
 use Phlexible\MediaSiteComponent\File\FileInterface;
+use Symfony\Component\EventDispatcher\Event;
 
 /**
  * Map document event
@@ -21,19 +20,14 @@ use Phlexible\MediaSiteComponent\File\FileInterface;
 class MapDocumentEvent extends Event
 {
     /**
-     * @var string
-     */
-    protected $eventName = Events::MAP_DOCUMENT;
-
-    /**
      * @var DocumentInterface
      */
-    protected $document = null;
+    private $document = null;
 
     /**
      * @var FileInterface
      */
-    protected $file = null;
+    private $file = null;
 
     /**
      * @param DocumentInterface $document

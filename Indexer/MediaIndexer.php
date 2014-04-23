@@ -8,12 +8,12 @@
 
 namespace Phlexible\IndexerMediaComponent\Indexer;
 
-use Phlexible\Event\EventDispatcher;
 use Phlexible\IndexerComponent\Document\DocumentFactory;
 use Phlexible\IndexerComponent\Document\DocumentInterface;
 use Phlexible\IndexerComponent\Indexer\AbstractIndexer;
 use Phlexible\IndexerComponent\Storage\StorageInterface;
 use Phlexible\IndexerMediaComponent\Event\MapDocumentEvent;
+use Phlexible\IndexerMediaComponent\Events;
 use Phlexible\MediaAssetComponent\Asset;
 use Phlexible\MediaAssetComponent\AssetManager;
 use Phlexible\MediaAssetComponent\ContentExtractor\ContentExtractorInterface;
@@ -21,6 +21,7 @@ use Phlexible\MediaSiteComponent\File\FileInterface;
 use Phlexible\MediaSiteComponent\Folder\FolderInterface;
 use Phlexible\MediaSiteComponent\Site\SiteInterface;
 use Phlexible\MediaSiteComponent\Site\SiteManager;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Media indexer
@@ -35,7 +36,7 @@ class MediaIndexer extends AbstractIndexer
     const DOCUMENT_TYPE = 'media';
 
     /**
-     * @var EventDispatcher
+     * @var EventDispatcherInterface
      */
     protected $dispatcher;
 
@@ -70,7 +71,7 @@ class MediaIndexer extends AbstractIndexer
     protected $defaultLanguage;
 
     /**
-     * @param EventDispatcher           $dispatcher
+     * @param EventDispatcherInterface  $dispatcher
      * @param StorageInterface          $storage
      * @param DocumentFactory           $documentFactory
      * @param AssetManager              $assetManager
@@ -78,7 +79,7 @@ class MediaIndexer extends AbstractIndexer
      * @param SiteManager               $siteManager
      * @param string                    $defaultLanguage
      */
-    public function __construct(EventDispatcher $dispatcher,
+    public function __construct(EventDispatcherInterface $dispatcher,
                                 StorageInterface $storage,
                                 DocumentFactory $documentFactory,
                                 AssetManager $assetManager,
@@ -287,7 +288,7 @@ class MediaIndexer extends AbstractIndexer
         */
 
         $event = new MapDocumentEvent($document, $file);
-        $this->dispatcher->dispatch($event);
+        $this->dispatcher->dispatch(Events::MAP_DOCUMENT, $event);
 
         return $document;
     }

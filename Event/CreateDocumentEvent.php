@@ -8,9 +8,8 @@
 
 namespace Phlexible\IndexerMediaComponent\Event;
 
-use Phlexible\Event\Event;
 use Phlexible\IndexerComponent\Document\DocumentInterface;
-use Phlexible\IndexerMediaComponent\Events;
+use Symfony\Component\EventDispatcher\Event;
 
 /**
  * Create document event
@@ -20,14 +19,9 @@ use Phlexible\IndexerMediaComponent\Events;
 class CreateDocumentEvent extends Event
 {
     /**
-     * @var string
-     */
-    protected $eventName = Events::CREATE_DOCUMENT;
-
-    /**
      * @var DocumentInterface
      */
-    protected $document = null;
+    private $document = null;
 
     /**
      * @param DocumentInterface $document
