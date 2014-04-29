@@ -14,8 +14,6 @@ use Phlexible\IndexerComponent\Indexer\AbstractIndexer;
 use Phlexible\IndexerComponent\Storage\StorageInterface;
 use Phlexible\IndexerMediaComponent\Event\MapDocumentEvent;
 use Phlexible\IndexerMediaComponent\Events;
-use Phlexible\MediaAssetComponent\Asset;
-use Phlexible\MediaAssetComponent\AssetManager;
 use Phlexible\MediaAssetComponent\ContentExtractor\ContentExtractorInterface;
 use Phlexible\MediaSiteComponent\File\FileInterface;
 use Phlexible\MediaSiteComponent\Folder\FolderInterface;
@@ -51,11 +49,6 @@ class MediaIndexer extends AbstractIndexer
     protected $documentFactory;
 
     /**
-     * @var AssetManager
-     */
-    protected $assetManager;
-
-    /**
      * @var ContentExtractorInterface
      */
     protected $contentExtractor;
@@ -74,7 +67,6 @@ class MediaIndexer extends AbstractIndexer
      * @param EventDispatcherInterface  $dispatcher
      * @param StorageInterface          $storage
      * @param DocumentFactory           $documentFactory
-     * @param AssetManager              $assetManager
      * @param ContentExtractorInterface $contentExtractor
      * @param SiteManager               $siteManager
      * @param string                    $defaultLanguage
@@ -82,7 +74,6 @@ class MediaIndexer extends AbstractIndexer
     public function __construct(EventDispatcherInterface $dispatcher,
                                 StorageInterface $storage,
                                 DocumentFactory $documentFactory,
-                                AssetManager $assetManager,
                                 ContentExtractorInterface $contentExtractor,
                                 SiteManager $siteManager,
                                 $defaultLanguage)
@@ -90,7 +81,6 @@ class MediaIndexer extends AbstractIndexer
         $this->dispatcher = $dispatcher;
         $this->storage = $storage;
         $this->documentFactory = $documentFactory;
-        $this->assetManager = $assetManager;
         $this->contentExtractor = $contentExtractor;
         $this->siteManager = $siteManager;
         $this->defaultLanguage = $defaultLanguage;

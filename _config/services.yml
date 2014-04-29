@@ -5,7 +5,6 @@ services:
             - "@dispatcher"
             - "@indexerMediaStorage"
             - "@indexerDocumentFactory"
-            - "@mediaAssetManager"
             - "@mediaAssetContentExtractor"
             - "@mediaSiteManager"
             - "%metasets.languages.default%"
