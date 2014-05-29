@@ -11,11 +11,11 @@ namespace Phlexible\IndexerMediaComponent;
 use Phlexible\Component\Component;
 
 /**
- * Media indexer component
+ * Media indexer bundle
  *
  * @package Media_IndexerMedia
  */
-class IndexerMediaComponent extends Component
+class IndexerMediaBundle extends Component
 {
     public function __construct()
     {

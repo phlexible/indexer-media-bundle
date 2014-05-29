@@ -21,7 +21,7 @@ class DeleteFileListener
         $file = $event->getFile();
 
         /* @var $indexerTools MWF_Core_Indexer_Tools */
-        $indexerTools = $container->indexerTools;
+        $indexerTools = $container->get('indexer.tools');
         $storages = $indexerTools->getRepositoriesByAcceptedStorage('media');
 
         $identifier = 'file_' . $file->getId() . '_' . $file->getVersion();

@@ -6,12 +6,12 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaComponent\Container;
+namespace Phlexible\IndexerMediaComponent\DependencyInjection;
 
-use Phlexible\Container\ContainerBuilder;
-use Phlexible\Container\Extension\Extension;
-use Phlexible\Container\Loader\YamlFileLoader;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 /**
  * Media indexer extension
@@ -23,11 +23,11 @@ class IndexerMediaExtension extends Extension
     /**
      * {@inheritdoc}
      */
-    public function load(ContainerBuilder $container, array $configs)
+    public function load(array $config, ContainerBuilder $container)
     {
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../_config'));
         $loader->load('services.yml');
 
-        $container->setAlias('indexerMediaStorage', 'indexerStorageDefault');
+        $container->setAlias('indexermedia.storage', 'indexer.storage.default');
     }
 }
