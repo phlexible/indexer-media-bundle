@@ -8,20 +8,13 @@
 
 namespace Phlexible\IndexerMediaComponent;
 
-use Phlexible\Component\Component;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
  * Media indexer bundle
  *
  * @package Media_IndexerMedia
  */
-class IndexerMediaBundle extends Component
+class IndexerMediaBundle extends Bundle
 {
-    public function __construct()
-    {
-        $this
-            ->setVersion('0.7.0')
-            ->setId('indexermedia')
-            ->setPackage('phlexible');
-    }
 }
