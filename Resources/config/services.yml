@@ -2,7 +2,7 @@ services:
     indexermedia.indexer:
         class: Phlexible\IndexerMediaComponent\Indexer\MediaIndexer
         arguments:
-            - "@dispatcher"
+            - "@event_dispatcher"
             - "@indexermedia.storage"
             - "@indexer.documentfactory"
             - "@mediaasset.extractor.content"
@@ -24,29 +24,29 @@ services:
     indexermedia.listener.importfile:
         class: Phlexible\IndexerMediaComponent\Listener\FileListener
         tags:
-            - {name: "event.listener", event: media_site.import_file, method: onImportFile}
+            - {name: "kernel.event_listener", event: media_site.import_file, method: onImportFile}
 
     indexermedia.listener.replacefile:
         class: Phlexible\IndexerMediaComponent\Listener\FileListener
         tags:
-            - {name: "event.listener", event: media_site.replace_file, method: onReplaceFile}
+            - {name: "kernel.event_listener", event: media_site.replace_file, method: onReplaceFile}
 
     indexermedia.listener.movefile:
         class: Phlexible\IndexerMediaComponent\Listener\FileListener
         tags:
-            - {name: "event.listener", event: media_site.move_file, method: onMoveFile}
+            - {name: "kernel.event_listener", event: media_site.move_file, method: onMoveFile}
 
     indexermedia.listener.deletefile:
         class: Phlexible\IndexerMediaComponent\Listener\DeleteFileListener
         tags:
-            - {name: "event.listener", event: media_site.delete_file, method: onDeleteFile}
+            - {name: "kernel.event_listener", event: media_site.delete_file, method: onDeleteFile}
 
     indexermedia.listener.savemeta:
         class: Phlexible\IndexerMediaComponent\Listener\DeleteFileListener
         tags:
-            - {name: "event.listener", event: media_manager.save_meta, method: onSaveMeta}
+            - {name: "kernel.event_listener", event: media_manager.save_meta, method: onSaveMeta}
 
     indexermedia.listener.createdocument:
         class: Phlexible\IndexerMediaComponent\Listener\CreateDocumentListener
         tags:
-            - {name: "event.listener", event: indexer.create_document, method: onCreateDocument}
+            - {name: "kernel.event_listener", event: indexer.create_document, method: onCreateDocument}
