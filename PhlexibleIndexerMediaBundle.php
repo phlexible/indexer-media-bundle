@@ -15,6 +15,6 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  *
  * @package Media_IndexerMedia
  */
-class IndexerMediaBundle extends Bundle
+class PhlexibleIndexerMediaBundle extends Bundle
 {
 }
