@@ -6,7 +6,7 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaComponent\Listener;
+namespace Phlexible\IndexerMediaComponent\EventListener;
 
 /**
  * Create document listener

@@ -6,7 +6,7 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaComponent\Listener;
+namespace Phlexible\IndexerMediaComponent\EventListener;
 
 /**
  * File listener
@@ -37,6 +37,23 @@ class FileListener
         $file = $event->getFile();
 
         $this->_updateFile($file, $container);
+    }
+
+    public function onDeleteFile(Media_Site_Event_DeleteFile $event, array $params)
+    {
+        $container = $params['container'];
+        $file = $event->getFile();
+
+        /* @var $indexerTools MWF_Core_Indexer_Tools */
+        $indexerTools = $container->get('indexer.tools');
+        $storages = $indexerTools->getRepositoriesByAcceptedStorage('media');
+
+        $identifier = 'file_' . $file->getId() . '_' . $file->getVersion();
+
+        foreach ($storages as $repository)
+        {
+            $repository->removeByIdentifier($identifier);
+        }
     }
 
     public function onSaveMeta(Media_Manager_Event_SaveMeta $event, array $params)
