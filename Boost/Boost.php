@@ -6,9 +6,9 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaComponent\Boost;
+namespace Phlexible\IndexerMediaBundle\Boost;
 
-use Phlexible\IndexerComponent\Boost\AbstractBoost;
+use Phlexible\IndexerBundle\Boost\AbstractBoost;
 
 /**
  * Media search boost

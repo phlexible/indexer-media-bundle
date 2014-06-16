@@ -1,21 +1,23 @@
 {
-    "name": "phlexible/indexer-media-component",
-    "description": "phlexible.core media indexer component",
+    "name": "phlexible/indexer-media-bundle",
+    "description": "phlexible media indexer bundle",
     "license": "proprietary",
+	"type": "symfony-bundle",
+	"keywords": ["indexer", "search"],
     "autoload": {
         "psr-4": {
-            "Phlexible\\IndexerMediaComponent\\": ""
+            "Phlexible\\IndexerMediaBundle\\": ""
         }
     },
     "require": {
         "php": ">=5.3.0",
-        "phlexible/indexer-component": "*",
+        "phlexible/indexer-bundle": "*",
         "phlexible/media": "*"
     },
     "repositories": [
         {
             "type": "composer",
-            "url": "https://packages.brainbits.net/phlexible-components/"
+            "url": "https://packages.brainbits.net/phlexible-bundles/"
         }
     ],
     "minimum-stability": "stable"

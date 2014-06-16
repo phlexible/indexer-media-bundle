@@ -6,10 +6,10 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaComponent\Event;
+namespace Phlexible\IndexerMediaBundle\Event;
 
-use Phlexible\IndexerComponent\Document\DocumentInterface;
-use Phlexible\MediaSiteComponent\File\FileInterface;
+use Phlexible\IndexerBundle\Document\DocumentInterface;
+use Phlexible\MediaSiteBundle\File\FileInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
