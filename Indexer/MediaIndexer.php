@@ -13,7 +13,7 @@ use Phlexible\IndexerBundle\Document\DocumentInterface;
 use Phlexible\IndexerBundle\Indexer\AbstractIndexer;
 use Phlexible\IndexerBundle\Storage\StorageInterface;
 use Phlexible\IndexerMediaBundle\Event\MapDocumentEvent;
-use Phlexible\IndexerMediaBundle\Events;
+use Phlexible\IndexerMediaBundle\IndexerMediaEvents;
 use Phlexible\MediaAssetBundle\ContentExtractor\ContentExtractorInterface;
 use Phlexible\MediaSiteBundle\File\FileInterface;
 use Phlexible\MediaSiteBundle\Folder\FolderInterface;
@@ -36,32 +36,32 @@ class MediaIndexer extends AbstractIndexer
     /**
      * @var EventDispatcherInterface
      */
-    protected $dispatcher;
+    private $dispatcher;
 
     /**
      * @var StorageInterface
      */
-    protected $storage;
+    private $storage;
 
     /**
      * @var DocumentFactory
      */
-    protected $documentFactory;
+    private $documentFactory;
 
     /**
      * @var ContentExtractorInterface
      */
-    protected $contentExtractor;
+    private $contentExtractor;
 
     /**
      * @var SiteManager
      */
-    protected $siteManager;
+    private $siteManager;
 
     /**
      * @var string
      */
-    protected $defaultLanguage;
+    private $defaultLanguage;
 
     /**
      * @param EventDispatcherInterface  $dispatcher
@@ -135,20 +135,17 @@ class MediaIndexer extends AbstractIndexer
 
         $sites = $this->siteManager->getAll();
 
-        foreach ($sites as $site)
-        {
+        foreach ($sites as $site) {
             /* @var $site SiteInterface */
 
             $rii = new \RecursiveIteratorIterator($site->getIterator(), \RecursiveIteratorIterator::SELF_FIRST);
 
-            foreach ($rii as $folder)
-            {
+            foreach ($rii as $folder) {
                 /* @var $folder FolderInterface */
 
                 $files = $site->findFilesByFolder($folder);
 
-                foreach ($files as $file)
-                {
+                foreach ($files as $file) {
                     /* @var $file FileInterface */
 
                     $fileId = $file->getId();
@@ -174,7 +171,7 @@ class MediaIndexer extends AbstractIndexer
 
         // get file object
         $site = $this->siteManager->getByFileId($fileId);
-        $file = $site->findFile($fileId);
+        $file = $site->findFile($fileId, $fileVersion);
         $folder = $site->findFolder($file->getFolderId());
 
         $document = $this->mapFileToDocument($file, $folder, $site, $id);
@@ -189,6 +186,7 @@ class MediaIndexer extends AbstractIndexer
      * @param FolderInterface $folder
      * @param SiteInterface   $site
      * @param integer         $id
+     *
      * @return DocumentInterface
      */
     private function mapFileToDocument(FileInterface $file, FolderInterface $folder, SiteInterface $site, $id)
@@ -196,11 +194,10 @@ class MediaIndexer extends AbstractIndexer
         // TODO do we need boosting?
 
         // extract content
-        $asset   = $this->assetManager->find($file);
-        $content = $this->extractContent($asset);
+        $content = $this->extractContent($file);
 
         // Field: mediatype
-        $assetType = preg_replace('/[^\w]/u', '', strtolower($asset->getDocumenttype()->getType()));
+        $assetType = preg_replace('/[^\w]/u', '', strtolower($file->getAttribute('documenttype')));
 
         // Field: readablefilesize
         $readableFileSize = \Brainbits_Format_Filesize::format($file->getSize());
@@ -213,13 +210,12 @@ class MediaIndexer extends AbstractIndexer
         $parentFolderIds = array();
         $parentFolder  = $folder;
 
-        while ($parentFolder)
-        {
-        	$parentFolderIds[] = $parentFolder->getId();
+        while ($parentFolder) {
+            $parentFolderIds[] = $parentFolder->getId();
             if (!$parentFolder->getParentId()) {
                 break;
             }
-        	$parentFolder = $site->findFolder($parentFolder->getParentId());
+            $parentFolder = $site->findFolder($parentFolder->getParentId());
         }
 
         $tags = '';
@@ -238,16 +234,16 @@ class MediaIndexer extends AbstractIndexer
             ->setValue('url', $url)
             ->setValue('mime_type', $file->getMimeType())
             ->setValue('asset_type', $assetType)
-            ->setValue('document_type', $asset->getDocumenttype()->getKey())
+            ->setValue('document_type', $file->getAttribute('documenttype'))
             ->setValue('filesize', $file->getSize())
             ->setValue('readable_filesize', $readableFileSize)
             ->setValue('content', $content);
 
         // process meta data
-        $metaLanguage = $this->_getMetaLanguage($asset);
+        /*
+        $metaLanguage = $this->getMetaLanguage($file);
         $meta         = $asset->getMeta($metaLanguage);
 
-        /*
         foreach ($meta as $metaKey => $metaField)
         {
             $metaFieldType  = $metaField['type'];
@@ -278,7 +274,7 @@ class MediaIndexer extends AbstractIndexer
         */
 
         $event = new MapDocumentEvent($document, $file);
-        $this->dispatcher->dispatch(Events::MAP_DOCUMENT, $event);
+        $this->dispatcher->dispatch(IndexerMediaEvents::MAP_DOCUMENT, $event);
 
         return $document;
     }
@@ -286,13 +282,14 @@ class MediaIndexer extends AbstractIndexer
     /**
      * Extract content from asset.
      *
-     * @param Asset $asset
+     * @param FileInterface $file
+     *
      * @return string
      */
-    private function extractContent(Asset $asset)
+    private function extractContent(FileInterface $file)
     {
         // parse content
-        $content = trim((string)$this->contentExtractor->extract($asset));
+        $content = trim((string) $this->contentExtractor->extract($file));
 
         if (!$content) {
             return null;
@@ -310,14 +307,18 @@ class MediaIndexer extends AbstractIndexer
         return $content;
     }
 
-    private function _getMetaLanguage(Asset $asset)
+    /**
+     * @param FileInterface $file
+     *
+     * @return string
+     */
+    private function getMetaLanguage(FileInterface $file)
     {
         // use meta default language as fallback
         $metaLanguage = $this->defaultLanguage;
 
-        $meta = $asset->getMeta($metaLanguage);
-        if (isset($meta['language']['value']) && strlen($meta['language']['value']))
-        {
+        $meta = $file->getMeta($metaLanguage);
+        if (isset($meta['language']['value']) && strlen($meta['language']['value'])) {
             // use the language of the document for indexing meta informations
             $metaLanguage = $meta['language']['value'];
         }

@@ -1,52 +1,47 @@
 services:
-    indexermedia.indexer:
+    phlexible_indexer_media.indexer:
         class: Phlexible\IndexerMediaBundle\Indexer\MediaIndexer
         arguments:
-            - "@event_dispatcher"
-            - "@indexermedia.storage"
-            - "@indexer.documentfactory"
-            - "@mediaasset.extractor.content"
-            - "@mediasite.manager"
-            - "%metasets.languages.default%"
+            - @event_dispatcher
+            - @phlexible_indexer_media.storage
+            - @phlexible_indexer.document_factory
+            - @phlexible_media_asset.extractor.content
+            - @phlexible_media_site.manager
+            - %phlexible_meta_set.languages.default%
         tags:
-            - {name: "indexer.indexer"}
+            - {name: phlexible_indexer.indexer}
 
-    indexermedia.boost:
-        class: Phlexible\IndexerMediaBundle\Boost\Boost
+    phlexible_indexer_media.boost:
+        class: Phlexible\IndexerMediaBundle\Boost\MediaBoost
 
-    indexermedia.query:
+    phlexible_indexer_media.query:
         class: Phlexible\IndexerMediaBundle\Query\MediaQuery
-        arguments: ["@indexer.query.parser", "@indexermedia.boost"]
+        arguments: [@phlexible_indexer.query.parser, @phlexible_indexer_media.boost]
         tags:
-            - {name: "indexer.search"}
+            - {name: phlexible_indexer.search}
 
     # event listeners
-    indexermedia.listener.importfile:
+    phlexible_indexer_media.listener.importfile:
         class: Phlexible\IndexerMediaBundle\EventListener\FileListener
         tags:
-            - {name: "kernel.event_listener", event: media_site.import_file, method: onImportFile}
+            - {name: kernel.event_listener, event: phlexible_media_site.import_file, method: onImportFile}
 
-    indexermedia.listener.replacefile:
+    phlexible_indexer_media.listener.replacefile:
         class: Phlexible\IndexerMediaBundle\EventListener\FileListener
         tags:
-            - {name: "kernel.event_listener", event: media_site.replace_file, method: onReplaceFile}
+            - {name: kernel.event_listener, event: phlexible_media_site.replace_file, method: onReplaceFile}
 
-    indexermedia.listener.movefile:
+    phlexible_indexer_media.listener.movefile:
         class: Phlexible\IndexerMediaBundle\EventListener\FileListener
         tags:
-            - {name: "kernel.event_listener", event: media_site.move_file, method: onMoveFile}
+            - {name: kernel.event_listener, event: phlexible_media_site.move_file, method: onMoveFile}
 
-    indexermedia.listener.deletefile:
+    phlexible_indexer_media.listener.deletefile:
         class: Phlexible\IndexerMediaBundle\EventListener\FileListener
         tags:
-            - {name: "kernel.event_listener", event: media_site.delete_file, method: onDeleteFile}
+            - {name: kernel.event_listener, event: phlexible_media_site.delete_file, method: onDeleteFile}
 
-    indexermedia.listener.savemeta:
+    phlexible_indexer_media.listener.savemeta:
         class: Phlexible\IndexerMediaBundle\EventListener\FileListener
         tags:
-            - {name: "kernel.event_listener", event: media_manager.save_meta, method: onSaveMeta}
-
-    indexermedia.listener.createdocument:
-        class: Phlexible\IndexerMediaBundle\EventListener\CreateDocumentListener
-        tags:
-            - {name: "kernel.event_listener", event: indexer.create_document, method: onCreateDocument}
+            - {name: kernel.event_listener, event: phlexible_media_manager.save_meta, method: onSaveMeta}

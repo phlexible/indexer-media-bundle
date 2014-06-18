@@ -22,12 +22,12 @@ class MapDocumentEvent extends Event
     /**
      * @var DocumentInterface
      */
-    private $document = null;
+    private $document;
 
     /**
      * @var FileInterface
      */
-    private $file = null;
+    private $file;
 
     /**
      * @param DocumentInterface $document

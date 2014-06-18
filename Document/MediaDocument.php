@@ -11,12 +11,15 @@ namespace Phlexible\IndexerMediaBundle\Document;
 use Phlexible\IndexerBundle\Document\Document;
 
 /**
- * MediaDocument
+ * Media document
  *
  * @author Phillip Look <pl@brainbits.net>
  */
 class MediaDocument extends Document
 {
+    /**
+     * @param string $documentType
+     */
     public function __construct($documentType)
     {
         parent::__construct($documentType);
@@ -25,22 +28,22 @@ class MediaDocument extends Document
             array(
                 'title'             => array(),
                 'highlight_title'   => array(self::CONFIG_READONLY),
-                'tags'              => array(self::CONFIG_READONLY, self::CONFIG_MULTIVALUE),
-                'copy'              => array(self::CONFIG_READONLY, self::CONFIG_MULTIVALUE),
+                'tags'              => array(self::CONFIG_MULTIVALUE => true, self::CONFIG_READONLY => true),
+                'copy'              => array(self::CONFIG_MULTIVALUE => true, self::CONFIG_READONLY => true),
 
                 'folder_id'         => array(),
-            	'parent_folder_ids' => array(self::CONFIG_MULTIVALUE),
+                'parent_folder_ids' => array(self::CONFIG_MULTIVALUE => true),
                 'file_id'           => array(),
-                'file_version'      => array(),
+                'file_version'      => array(self::CONFIG_TYPE => self::TYPE_INTEGER),
                 'filename'          => array(),
                 'url'               => array(),
                 'rawcontent'        => array(),
                 'mime_type'         => array(),
                 'asset_type'        => array(),
                 'document_type'     => array(),
-                'filesize'          => array(),
-                'readable_filesize' => array(self::CONFIG_NOTINDEXED),
-                'content'           => array(self::CONFIG_COPY),
+                'filesize'          => array(self::CONFIG_TYPE => self::TYPE_INTEGER),
+                'readable_filesize' => array(self::CONFIG_NOTINDEXED => true),
+                'content'           => array(self::CONFIG_TYPE => self::TYPE_COPY),
             )
         );
     }

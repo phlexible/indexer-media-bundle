@@ -18,7 +18,26 @@ use Phlexible\IndexerBundle\Query\AbstractQuery;
  */
 class MediaQuery extends AbstractQuery
 {
-    protected $_fields        = array('title', 'tags', 'copy');
-    protected $_documentTypes = array('media');
-    protected $_label         = 'Media search';
+    /**
+     * {@inheritdoc}
+     */
+    public function getFields()
+    {
+        return array('title', 'tags', 'copy');
+    }
+    /**
+     * {@inheritdoc}
+     */
+    public function getDocumentType()
+    {
+        return array('media');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getLabel()
+    {
+        return 'Media search';
+    }
 }

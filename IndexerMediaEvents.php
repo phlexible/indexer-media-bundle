@@ -13,17 +13,11 @@ namespace Phlexible\IndexerMediaBundle;
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
-interface Events
+interface IndexerMediaEvents
 {
-    /**
-     * Create Document Event
-     * Fired when a new document is created
-     */
-    const CREATE_DOCUMENT = 'indexermedia.create_document';
-
     /**
      * Map Document Event
      * Fired when a document is mapped
      */
-    const MAP_DOCUMENT = 'indexermedia.map_document';
+    const MAP_DOCUMENT = 'phlexible_indexer_media.map_document';
 }
