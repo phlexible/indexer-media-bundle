@@ -6,9 +6,9 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaBundle\Query;
+namespace Phlexible\Bundle\IndexerMediaBundle\Query;
 
-use Phlexible\IndexerBundle\Query\AbstractQuery;
+use Phlexible\Bundle\IndexerBundle\Query\AbstractQuery;
 
 /**
  * Media query

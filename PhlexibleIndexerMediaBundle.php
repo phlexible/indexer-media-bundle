@@ -6,7 +6,7 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaBundle;
+namespace Phlexible\Bundle\IndexerMediaBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 

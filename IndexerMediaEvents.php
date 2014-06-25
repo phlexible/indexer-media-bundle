@@ -6,7 +6,7 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaBundle;
+namespace Phlexible\Bundle\IndexerMediaBundle;
 
 /**
  * Media indexer events

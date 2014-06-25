@@ -6,7 +6,7 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaBundle\EventListener;
+namespace Phlexible\Bundle\IndexerMediaBundle\EventListener;
 
 /**
  * File listener

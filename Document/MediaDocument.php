@@ -6,9 +6,9 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaBundle\Document;
+namespace Phlexible\Bundle\IndexerMediaBundle\Document;
 
-use Phlexible\IndexerBundle\Document\Document;
+use Phlexible\Bundle\IndexerBundle\Document\Document;
 
 /**
  * Media document

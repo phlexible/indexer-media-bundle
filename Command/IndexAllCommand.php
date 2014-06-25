@@ -6,10 +6,10 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaBundle\Command;
+namespace Phlexible\Bundle\IndexerMediaBundle\Command;
 
+use Phlexible\Bundle\QueueBundle\Entity\Job;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Phlexible\IndexerBundle\Storage\Storage;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -65,7 +65,8 @@ class IndexAllCommand extends ContainerAwareCommand
             //$output->writeln('Document: ' . $document->getDocumentType() . ' ' . $document->getDocumentClass() . ' ' . $document->getIdentifier());
 
             if ($queue) {
-
+                $job = new Job('indexer-media:index', array('--documentId', $document->getIdentifier()));
+                $this->getContainer()->get('phlexible_queue.job_manager')->addJob($job);
             } else {
                 $update->addUpdate($document);
             }

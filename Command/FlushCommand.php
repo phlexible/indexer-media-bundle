@@ -6,11 +6,11 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaBundle\Command;
+namespace Phlexible\Bundle\IndexerMediaBundle\Command;
 
-use Phlexible\IndexerMediaBundle\Indexer\MediaIndexer;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Phlexible\IndexerBundle\Storage\Storage;
+use Phlexible\Bundle\IndexerBundle\Storage\Storage;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 

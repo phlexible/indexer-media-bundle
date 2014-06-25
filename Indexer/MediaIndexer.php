@@ -6,19 +6,19 @@
  * @license   proprietary
  */
 
-namespace Phlexible\IndexerMediaBundle\Indexer;
+namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
-use Phlexible\IndexerBundle\Document\DocumentFactory;
-use Phlexible\IndexerBundle\Document\DocumentInterface;
-use Phlexible\IndexerBundle\Indexer\AbstractIndexer;
-use Phlexible\IndexerBundle\Storage\StorageInterface;
-use Phlexible\IndexerMediaBundle\Event\MapDocumentEvent;
-use Phlexible\IndexerMediaBundle\IndexerMediaEvents;
-use Phlexible\MediaAssetBundle\ContentExtractor\ContentExtractorInterface;
-use Phlexible\MediaSiteBundle\File\FileInterface;
-use Phlexible\MediaSiteBundle\Folder\FolderInterface;
-use Phlexible\MediaSiteBundle\Site\SiteInterface;
-use Phlexible\MediaSiteBundle\Site\SiteManager;
+use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
+use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
+use Phlexible\Bundle\IndexerBundle\Indexer\AbstractIndexer;
+use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
+use Phlexible\Bundle\IndexerMediaBundle\Event\MapDocumentEvent;
+use Phlexible\Bundle\IndexerMediaBundle\IndexerMediaEvents;
+use Phlexible\Bundle\MediaAssetBundle\ContentExtractor\ContentExtractorInterface;
+use Phlexible\Bundle\MediaSiteBundle\File\FileInterface;
+use Phlexible\Bundle\MediaSiteBundle\Folder\FolderInterface;
+use Phlexible\Bundle\MediaSiteBundle\Site\SiteInterface;
+use Phlexible\Bundle\MediaSiteBundle\Site\SiteManager;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -115,7 +115,7 @@ class MediaIndexer extends AbstractIndexer
      */
     public function getDocumentClass()
     {
-        return 'Phlexible\IndexerMediaBundle\Document\MediaDocument';
+        return 'Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument';
     }
 
     /**

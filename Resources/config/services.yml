@@ -1,6 +1,6 @@
 services:
     phlexible_indexer_media.indexer:
-        class: Phlexible\IndexerMediaBundle\Indexer\MediaIndexer
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer
         arguments:
             - @event_dispatcher
             - @phlexible_indexer_media.storage
@@ -12,36 +12,36 @@ services:
             - {name: phlexible_indexer.indexer}
 
     phlexible_indexer_media.boost:
-        class: Phlexible\IndexerMediaBundle\Boost\MediaBoost
+        class: Phlexible\Bundle\IndexerMediaBundle\Boost\MediaBoost
 
     phlexible_indexer_media.query:
-        class: Phlexible\IndexerMediaBundle\Query\MediaQuery
+        class: Phlexible\Bundle\IndexerMediaBundle\Query\MediaQuery
         arguments: [@phlexible_indexer.query.parser, @phlexible_indexer_media.boost]
         tags:
             - {name: phlexible_indexer.search}
 
     # event listeners
     phlexible_indexer_media.listener.importfile:
-        class: Phlexible\IndexerMediaBundle\EventListener\FileListener
+        class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
         tags:
             - {name: kernel.event_listener, event: phlexible_media_site.import_file, method: onImportFile}
 
     phlexible_indexer_media.listener.replacefile:
-        class: Phlexible\IndexerMediaBundle\EventListener\FileListener
+        class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
         tags:
             - {name: kernel.event_listener, event: phlexible_media_site.replace_file, method: onReplaceFile}
 
     phlexible_indexer_media.listener.movefile:
-        class: Phlexible\IndexerMediaBundle\EventListener\FileListener
+        class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
         tags:
             - {name: kernel.event_listener, event: phlexible_media_site.move_file, method: onMoveFile}
 
     phlexible_indexer_media.listener.deletefile:
-        class: Phlexible\IndexerMediaBundle\EventListener\FileListener
+        class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
         tags:
             - {name: kernel.event_listener, event: phlexible_media_site.delete_file, method: onDeleteFile}
 
     phlexible_indexer_media.listener.savemeta:
-        class: Phlexible\IndexerMediaBundle\EventListener\FileListener
+        class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
         tags:
             - {name: kernel.event_listener, event: phlexible_media_manager.save_meta, method: onSaveMeta}
