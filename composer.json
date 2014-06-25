@@ -11,8 +11,7 @@
     },
     "require": {
         "php": ">=5.3.0",
-        "phlexible/indexer-bundle": "*",
-        "phlexible/media": "*"
+        "phlexible/indexer-bundle": "*"
     },
     "repositories": [
         {
