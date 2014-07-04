@@ -19,6 +19,7 @@ use Phlexible\Bundle\MediaSiteBundle\File\FileInterface;
 use Phlexible\Bundle\MediaSiteBundle\Folder\FolderInterface;
 use Phlexible\Bundle\MediaSiteBundle\Site\SiteInterface;
 use Phlexible\Bundle\MediaSiteBundle\Site\SiteManager;
+use Phlexible\Component\Formatter\FilesizeFormatter;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -200,7 +201,8 @@ class MediaIndexer extends AbstractIndexer
         $assetType = preg_replace('/[^\w]/u', '', strtolower($file->getAttribute('documenttype')));
 
         // Field: readablefilesize
-        $readableFileSize = \Brainbits_Format_Filesize::format($file->getSize());
+        $formatter = new FilesizeFormatter();
+        $readableFileSize = $formatter->formatFilesize($file->getSize());
 
         // Field: url
         $url = '/download/' . $file->getId() . '/' . $file->getName();

@@ -13,7 +13,7 @@ namespace Phlexible\Bundle\IndexerMediaBundle;
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
-interface IndexerMediaEvents
+class IndexerMediaEvents
 {
     /**
      * Map Document Event
