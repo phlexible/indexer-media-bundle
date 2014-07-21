@@ -12,7 +12,10 @@ use Phlexible\Bundle\MediaSiteBundle\Event\CreateFileEvent;
 use Phlexible\Bundle\MediaSiteBundle\Event\DeleteFileEvent;
 use Phlexible\Bundle\MediaSiteBundle\Event\MoveFileEvent;
 use Phlexible\Bundle\MediaSiteBundle\Event\ReplaceFileEvent;
+use Phlexible\Bundle\MediaSiteBundle\File\FileInterface;
 use Phlexible\Bundle\MediaSiteBundle\MediaSiteEvents;
+use Phlexible\Bundle\QueueBundle\Entity\Job;
+use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -27,6 +30,7 @@ class FileListener implements EventSubscriberInterface
      */
     public static function getSubscribedEvents()
     {
+        // TODO: activate
         return array();
         return array(
             MediaSiteEvents::CREATE_FILE => 'onCreateFile',
@@ -37,30 +41,42 @@ class FileListener implements EventSubscriberInterface
         );
     }
 
+    /**
+     * @param CreateFileEvent $event
+     */
     public function onCreateFile(CreateFileEvent $event)
     {
-        $file = $event->getFile();
+        $file = $event->getAction()->getFile();
 
-        $this->_updateFile($file, $container);
+        $this->queueJob($file);
     }
 
+    /**
+     * @param ReplaceFileEvent $event
+     */
     public function onReplaceFile(ReplaceFileEvent $event)
     {
-        $file = $event->getFile();
+        $file = $event->getAction()->getFile();
 
-        $this->_updateFile($file, $container);
+        $this->queueJob($file);
     }
 
+    /**
+     * @param MoveFileEvent $event
+     */
     public function onMoveFile(MoveFileEvent $event)
     {
-        $file = $event->getFile();
+        $file = $event->getAction()->getFile();
 
-        $this->_updateFile($file, $container);
+        $this->queueJob($file);
     }
 
+    /**
+     * @param DeleteFileEvent $event
+     */
     public function onDeleteFile(DeleteFileEvent $event)
     {
-        $file = $event->getFile();
+        $file = $event->getAction()->getFile();
 
         /* @var $indexerTools MWF_Core_Indexer_Tools */
         $indexerTools = $container->get('indexer.tools');
@@ -76,27 +92,32 @@ class FileListener implements EventSubscriberInterface
 
     public function onSaveMeta(Media_Manager_Event_SaveMeta $event)
     {
-        $container = $params['container'];
         $file = $event->getFile();
 
-        $this->_updateFile($file, $container);
+        $this->queueJob($file);
     }
 
-    private function _updateFile(Media_Site_File_Abstract $file, MWF_Container_ContainerInterface $container)
+    /**
+     * @var JobManagerInterface
+     */
+    private $jobManager;
+
+    /**
+     * @param JobManagerInterface $jobManager
+     */
+    public function __construct(JobManagerInterface $jobManager)
     {
-        $queueManager = $container->queueManager;
+        $this->jobManager = $jobManager;
+    }
 
-        /* @var $indexerTools MWF_Core_Indexer_Tools */
-        $indexerTools = $container->get('indexer.tools');
-        $storages = $indexerTools->getRepositoriesByAcceptedStorage('media');
-
+    /**
+     * @param FileInterface $file
+     */
+    private function queueJob(FileInterface $file)
+    {
         $identifier = 'file_' . $file->getId() . '_' . $file->getVersion();
 
-        $job = new MWF_Core_Indexer_Job_AddNode();
-        $job->setIdentifier($identifier);
-        $job->setStorageIds(array_keys($storages));
-        $job->setIndexerId('media');
-
-        $queueManager->addUniqueJob($job, MWF_Core_Queue_Manager::PRIORITY_LOW);
+        $job = new Job('indexer-media', array('--documentId', $identifier));
+        $this->jobManager->addUniqueJob($job);
     }
 }
