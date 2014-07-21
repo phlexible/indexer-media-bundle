@@ -23,5 +23,6 @@ services:
     # event listeners
     phlexible_indexer_media.listener.file:
         class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
+        arguments: [@phlexible_queue.job_manager]
         tags:
             - {name: kernel.event_subscriber}
