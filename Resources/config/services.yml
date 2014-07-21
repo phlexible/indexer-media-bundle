@@ -21,27 +21,7 @@ services:
             - {name: phlexible_indexer.search}
 
     # event listeners
-    phlexible_indexer_media.listener.importfile:
+    phlexible_indexer_media.listener.file:
         class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
         tags:
-            - {name: kernel.event_listener, event: phlexible_media_site.import_file, method: onImportFile}
-
-    phlexible_indexer_media.listener.replacefile:
-        class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
-        tags:
-            - {name: kernel.event_listener, event: phlexible_media_site.replace_file, method: onReplaceFile}
-
-    phlexible_indexer_media.listener.movefile:
-        class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
-        tags:
-            - {name: kernel.event_listener, event: phlexible_media_site.move_file, method: onMoveFile}
-
-    phlexible_indexer_media.listener.deletefile:
-        class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
-        tags:
-            - {name: kernel.event_listener, event: phlexible_media_site.delete_file, method: onDeleteFile}
-
-    phlexible_indexer_media.listener.savemeta:
-        class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener
-        tags:
-            - {name: kernel.event_listener, event: phlexible_media_manager.save_meta, method: onSaveMeta}
+            - {name: kernel.event_subscriber}

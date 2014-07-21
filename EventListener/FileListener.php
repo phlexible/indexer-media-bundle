@@ -8,40 +8,58 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\EventListener;
 
+use Phlexible\Bundle\MediaSiteBundle\Event\CreateFileEvent;
+use Phlexible\Bundle\MediaSiteBundle\Event\DeleteFileEvent;
+use Phlexible\Bundle\MediaSiteBundle\Event\MoveFileEvent;
+use Phlexible\Bundle\MediaSiteBundle\Event\ReplaceFileEvent;
+use Phlexible\Bundle\MediaSiteBundle\MediaSiteEvents;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+
 /**
  * File listener
  *
  * @author Phillip Look <pl@brainbits.net>
  */
-class FileListener
+class FileListener implements EventSubscriberInterface
 {
-    public function onImportFile(Media_Site_Event_ImportFile $event, array $params)
+    /**
+     * {@inheritdoc}
+     */
+    public static function getSubscribedEvents()
     {
-        $container = $params['container'];
+        return array();
+        return array(
+            MediaSiteEvents::CREATE_FILE => 'onCreateFile',
+            MediaSiteEvents::REPLACE_FILE => 'onReplaceFile',
+            MediaSiteEvents::MOVE_FILE => 'onMoveFile',
+            MediaSiteEvents::DELETE_FILE => 'onDeleteFile',
+            //MediaSiteEvents::DELETE_FILE => 'onSaveMeta',
+        );
+    }
+
+    public function onCreateFile(CreateFileEvent $event)
+    {
         $file = $event->getFile();
 
         $this->_updateFile($file, $container);
     }
 
-    public function onReplaceFile(Media_Site_Event_ReplaceFile $event, array $params)
+    public function onReplaceFile(ReplaceFileEvent $event)
     {
-        $container = $params['container'];
         $file = $event->getFile();
 
         $this->_updateFile($file, $container);
     }
 
-    public function onMoveFile(Media_Site_Event_MoveFile $event, array $params)
+    public function onMoveFile(MoveFileEvent $event)
     {
-        $container = $params['container'];
         $file = $event->getFile();
 
         $this->_updateFile($file, $container);
     }
 
-    public function onDeleteFile(Media_Site_Event_DeleteFile $event, array $params)
+    public function onDeleteFile(DeleteFileEvent $event)
     {
-        $container = $params['container'];
         $file = $event->getFile();
 
         /* @var $indexerTools MWF_Core_Indexer_Tools */
@@ -56,7 +74,7 @@ class FileListener
         }
     }
 
-    public function onSaveMeta(Media_Manager_Event_SaveMeta $event, array $params)
+    public function onSaveMeta(Media_Manager_Event_SaveMeta $event)
     {
         $container = $params['container'];
         $file = $event->getFile();
