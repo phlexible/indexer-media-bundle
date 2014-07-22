@@ -5,8 +5,8 @@ services:
             - @event_dispatcher
             - @phlexible_indexer_media.storage
             - @phlexible_indexer.document_factory
-            - @phlexible_media_asset.extractor.content
-            - @phlexible_media_site.manager
+            - @phlexible_media_extractor.extractor.content
+            - @phlexible_media_site.site_manager
             - %phlexible_meta_set.languages.default%
         tags:
             - {name: phlexible_indexer.indexer}
