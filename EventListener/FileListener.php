@@ -26,17 +26,29 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class FileListener implements EventSubscriberInterface
 {
     /**
+     * @var JobManagerInterface
+     */
+    private $jobManager;
+
+    /**
+     * @param JobManagerInterface $jobManager
+     */
+    public function __construct(JobManagerInterface $jobManager)
+    {
+        $this->jobManager = $jobManager;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public static function getSubscribedEvents()
     {
         // TODO: activate
-        return array();
         return array(
-            MediaSiteEvents::CREATE_FILE => 'onCreateFile',
+            MediaSiteEvents::CREATE_FILE  => 'onCreateFile',
             MediaSiteEvents::REPLACE_FILE => 'onReplaceFile',
-            MediaSiteEvents::MOVE_FILE => 'onMoveFile',
-            MediaSiteEvents::DELETE_FILE => 'onDeleteFile',
+            MediaSiteEvents::MOVE_FILE    => 'onMoveFile',
+            MediaSiteEvents::DELETE_FILE  => 'onDeleteFile',
             //MediaSiteEvents::DELETE_FILE => 'onSaveMeta',
         );
     }
@@ -95,19 +107,6 @@ class FileListener implements EventSubscriberInterface
         $file = $event->getFile();
 
         $this->queueJob($file);
-    }
-
-    /**
-     * @var JobManagerInterface
-     */
-    private $jobManager;
-
-    /**
-     * @param JobManagerInterface $jobManager
-     */
-    public function __construct(JobManagerInterface $jobManager)
-    {
-        $this->jobManager = $jobManager;
     }
 
     /**
