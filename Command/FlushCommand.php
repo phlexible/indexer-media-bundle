@@ -10,7 +10,6 @@ namespace Phlexible\Bundle\IndexerMediaBundle\Command;
 
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Phlexible\Bundle\IndexerBundle\Storage\Storage;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
