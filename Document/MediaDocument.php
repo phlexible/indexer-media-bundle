@@ -17,33 +17,28 @@ use Phlexible\Bundle\IndexerBundle\Document\Document;
  */
 class MediaDocument extends Document
 {
-    /**
-     * @param string $documentType
-     */
-    public function __construct($documentType)
+    public function __construct()
     {
-        parent::__construct($documentType);
-
         $this->setFields(
             array(
-                'title'             => array(),
-                'highlight_title'   => array(self::CONFIG_READONLY),
-                'tags'              => array(self::CONFIG_MULTIVALUE => true, self::CONFIG_READONLY => true),
-                'copy'              => array(self::CONFIG_MULTIVALUE => true, self::CONFIG_READONLY => true),
+                'title'             => array('type' => self::TYPE_STRING),
+                'highlight_title'   => array('type' => self::TYPE_STRING, 'readonly' => true),
+                'tags'              => array('type' => self::TYPE_TEXT, 'array' => true, 'readonly' => true),
+                'copy'              => array('type' => self::TYPE_TEXT, 'array' => true,'readonly' => true),
+                'content'           => array('type' => self::TYPE_STRING, 'copyFields' => array('copy')),
 
-                'folder_id'         => array(),
-                'parent_folder_ids' => array(self::CONFIG_MULTIVALUE => true),
-                'file_id'           => array(),
-                'file_version'      => array(self::CONFIG_TYPE => self::TYPE_INTEGER),
-                'filename'          => array(),
-                'url'               => array(),
-                'rawcontent'        => array(),
-                'mime_type'         => array(),
-                'asset_type'        => array(),
-                'document_type'     => array(),
-                'filesize'          => array(self::CONFIG_TYPE => self::TYPE_INTEGER),
-                'readable_filesize' => array(self::CONFIG_NOTINDEXED => true),
-                'content'           => array(self::CONFIG_TYPE => self::TYPE_COPY),
+                'folder_id'         => array('type' => self::TYPE_STRING),
+                'parent_folder_ids' => array('type' => self::TYPE_STRING, 'array' => true),
+                'file_id'           => array('type' => self::TYPE_STRING),
+                'file_version'      => array('type' => self::TYPE_INTEGER),
+                'filename'          => array('type' => self::TYPE_STRING),
+                'url'               => array('type' => self::TYPE_STRING),
+                'rawcontent'        => array('type' => self::TYPE_STRING),
+                'mime_type'         => array('type' => self::TYPE_STRING),
+                'asset_type'        => array('type' => self::TYPE_STRING),
+                'document_type'     => array('type' => self::TYPE_STRING),
+                'filesize'          => array('type' => self::TYPE_INTEGER),
+                'readable_filesize' => array('type' => self::TYPE_STRING, 'indexed' => false),
             )
         );
     }

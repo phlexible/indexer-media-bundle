@@ -30,11 +30,6 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 class MediaIndexer extends AbstractIndexer
 {
     /**
-     * @var string
-     */
-    const DOCUMENT_TYPE = 'media';
-
-    /**
      * @var EventDispatcherInterface
      */
     private $dispatcher;
@@ -122,14 +117,6 @@ class MediaIndexer extends AbstractIndexer
     /**
      * {@inheritdoc}
      */
-    public function getDocumentType()
-    {
-        return self::DOCUMENT_TYPE;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getAllIdentifiers()
     {
         $indexIdentifiers = array();
@@ -197,9 +184,6 @@ class MediaIndexer extends AbstractIndexer
         // extract content
         $content = $this->extractContent($file);
 
-        // Field: mediatype
-        $assetType = preg_replace('/[^\w]/u', '', strtolower($file->getAttribute('documenttype')));
-
         // Field: readablefilesize
         $formatter = new FilesizeFormatter();
         $readableFileSize = $formatter->formatFilesize($file->getSize());
@@ -235,8 +219,8 @@ class MediaIndexer extends AbstractIndexer
             ->setValue('filename', $file->getName())
             ->setValue('url', $url)
             ->setValue('mime_type', $file->getMimeType())
-            ->setValue('asset_type', $assetType)
-            ->setValue('document_type', $file->getAttribute('documenttype'))
+            ->setValue('asset_type', $file->getAssetType())
+            ->setValue('document_type', $file->getDocumenttype())
             ->setValue('filesize', $file->getSize())
             ->setValue('readable_filesize', $readableFileSize)
             ->setValue('content', $content);
