@@ -8,14 +8,14 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\EventListener;
 
-use Phlexible\Bundle\MediaSiteBundle\Event\CreateFileEvent;
-use Phlexible\Bundle\MediaSiteBundle\Event\DeleteFileEvent;
-use Phlexible\Bundle\MediaSiteBundle\Event\MoveFileEvent;
-use Phlexible\Bundle\MediaSiteBundle\Event\ReplaceFileEvent;
-use Phlexible\Bundle\MediaSiteBundle\MediaSiteEvents;
-use Phlexible\Bundle\MediaSiteBundle\Model\FileInterface;
 use Phlexible\Bundle\QueueBundle\Entity\Job;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
+use Phlexible\Component\Volume\Event\CreateFileEvent;
+use Phlexible\Component\Volume\Event\FileEvent;
+use Phlexible\Component\Volume\Event\MoveFileEvent;
+use Phlexible\Component\Volume\Event\ReplaceFileEvent;
+use Phlexible\Component\Volume\Model\FileInterface;
+use Phlexible\Component\Volume\VolumeEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -45,11 +45,11 @@ class FileListener implements EventSubscriberInterface
     {
         // TODO: activate
         return array(
-            MediaSiteEvents::CREATE_FILE  => 'onCreateFile',
-            MediaSiteEvents::REPLACE_FILE => 'onReplaceFile',
-            MediaSiteEvents::MOVE_FILE    => 'onMoveFile',
-            MediaSiteEvents::DELETE_FILE  => 'onDeleteFile',
-            //MediaSiteEvents::DELETE_FILE => 'onSaveMeta',
+            VolumeEvents::CREATE_FILE  => 'onCreateFile',
+            VolumeEvents::REPLACE_FILE => 'onReplaceFile',
+            VolumeEvents::MOVE_FILE    => 'onMoveFile',
+            VolumeEvents::DELETE_FILE  => 'onDeleteFile',
+            //VolumeEvents::DELETE_FILE => 'onSaveMeta',
         );
     }
 
@@ -58,7 +58,7 @@ class FileListener implements EventSubscriberInterface
      */
     public function onCreateFile(CreateFileEvent $event)
     {
-        $file = $event->getAction()->getFile();
+        $file = $event->getFile();
 
         $this->queueJob($file);
     }
@@ -68,7 +68,7 @@ class FileListener implements EventSubscriberInterface
      */
     public function onReplaceFile(ReplaceFileEvent $event)
     {
-        $file = $event->getAction()->getFile();
+        $file = $event->getFile();
 
         $this->queueJob($file);
     }
@@ -78,17 +78,17 @@ class FileListener implements EventSubscriberInterface
      */
     public function onMoveFile(MoveFileEvent $event)
     {
-        $file = $event->getAction()->getFile();
+        $file = $event->getFile();
 
         $this->queueJob($file);
     }
 
     /**
-     * @param DeleteFileEvent $event
+     * @param FileEvent $event
      */
-    public function onDeleteFile(DeleteFileEvent $event)
+    public function onDeleteFile(FileEvent $event)
     {
-        $file = $event->getAction()->getFile();
+        $file = $event->getFile();
 
         /* @var $indexerTools MWF_Core_Indexer_Tools */
         $indexerTools = $container->get('indexer.tools');
