@@ -8,6 +8,8 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\EventListener;
 
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer;
+use Phlexible\Bundle\MediaManagerBundle\Event\SaveMetaEvent;
 use Phlexible\Bundle\QueueBundle\Entity\Job;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
 use Phlexible\Component\Volume\Event\CreateFileEvent;
@@ -26,16 +28,16 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class FileListener implements EventSubscriberInterface
 {
     /**
-     * @var JobManagerInterface
+     * @var MediaIndexer
      */
-    private $jobManager;
+    private $indexer;
 
     /**
-     * @param JobManagerInterface $jobManager
+     * @param MediaIndexer $indexer
      */
-    public function __construct(JobManagerInterface $jobManager)
+    public function __construct(MediaIndexer $indexer)
     {
-        $this->jobManager = $jobManager;
+        $this->indexer = $indexer;
     }
 
     /**
@@ -60,7 +62,7 @@ class FileListener implements EventSubscriberInterface
     {
         $file = $event->getFile();
 
-        $this->queueJob($file);
+        $this->indexer->add("file_{$file->getId()}_{$file->getVersion()}", true);
     }
 
     /**
@@ -70,7 +72,7 @@ class FileListener implements EventSubscriberInterface
     {
         $file = $event->getFile();
 
-        $this->queueJob($file);
+        $this->indexer->add("file_{$file->getId()}_{$file->getVersion()}", true);
     }
 
     /**
@@ -80,7 +82,7 @@ class FileListener implements EventSubscriberInterface
     {
         $file = $event->getFile();
 
-        $this->queueJob($file);
+        $this->indexer->add("file_{$file->getId()}_{$file->getVersion()}", true);
     }
 
     /**
@@ -90,33 +92,13 @@ class FileListener implements EventSubscriberInterface
     {
         $file = $event->getFile();
 
-        /* @var $indexerTools MWF_Core_Indexer_Tools */
-        $indexerTools = $container->get('indexer.tools');
-        $storages = $indexerTools->getRepositoriesByAcceptedStorage('media');
-
-        $identifier = 'file_' . $file->getId() . '_' . $file->getVersion();
-
-        foreach ($storages as $repository)
-        {
-            $repository->removeByIdentifier($identifier);
-        }
+        $this->indexer->delete("file_{$file->getId()}_{$file->getVersion()}", true);
     }
 
-    public function onSaveMeta(Media_Manager_Event_SaveMeta $event)
+    public function onSaveMeta(SaveMetaEvent $event)
     {
         $file = $event->getFile();
 
-        $this->queueJob($file);
-    }
-
-    /**
-     * @param FileInterface $file
-     */
-    private function queueJob(FileInterface $file)
-    {
-        $identifier = 'file_' . $file->getId() . '_' . $file->getVersion();
-
-        $job = new Job('indexer-media', array('--documentId', $identifier));
-        $this->jobManager->addUniqueJob($job);
+        $this->indexer->add("file_{$file->getId()}_{$file->getVersion()}", true);
     }
 }

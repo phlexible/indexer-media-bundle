@@ -10,16 +10,12 @@ namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
-use Phlexible\Bundle\IndexerBundle\Indexer\AbstractIndexer;
+use Phlexible\Bundle\IndexerBundle\Indexer\IndexerInterface;
 use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
-use Phlexible\Bundle\IndexerMediaBundle\Event\MapDocumentEvent;
-use Phlexible\Bundle\IndexerMediaBundle\IndexerMediaEvents;
-use Phlexible\Bundle\MediaExtractorBundle\ContentExtractor\ContentExtractorInterface;
-use Phlexible\Bundle\MediaSiteBundle\Model\FileInterface;
-use Phlexible\Bundle\MediaSiteBundle\Model\FolderInterface;
-use Phlexible\Bundle\MediaSiteBundle\Site\SiteInterface;
-use Phlexible\Bundle\MediaSiteBundle\Site\SiteManager;
+use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
+use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
 use Phlexible\Component\Formatter\FilesizeFormatter;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -27,67 +23,60 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *
  * @author Phillip Look <pl@brainbits.net>
  */
-class MediaIndexer extends AbstractIndexer
+class MediaIndexer implements IndexerInterface
 {
-    /**
-     * @var EventDispatcherInterface
-     */
-    private $dispatcher;
-
     /**
      * @var StorageInterface
      */
     private $storage;
 
     /**
-     * @var DocumentFactory
+     * @var MediaDocumentMapper
      */
-    private $documentFactory;
+    private $mapper;
 
     /**
-     * @var ContentExtractorInterface
+     * @var JobManagerInterface
      */
-    private $contentExtractor;
+    private $jobManager;
 
     /**
-     * @var SiteManager
+     * @var LoggerInterface
      */
-    private $siteManager;
+    private $logger;
 
     /**
-     * @var string
+     * @param StorageInterface    $storage
+     * @param MediaDocumentMapper $mapper
+     * @param JobManagerInterface $jobManager
+     * @param LoggerInterface     $logger
      */
-    private $defaultLanguage;
-
-    /**
-     * @param EventDispatcherInterface  $dispatcher
-     * @param StorageInterface          $storage
-     * @param DocumentFactory           $documentFactory
-     * @param ContentExtractorInterface $contentExtractor
-     * @param SiteManager               $siteManager
-     * @param string                    $defaultLanguage
-     */
-    public function __construct(EventDispatcherInterface $dispatcher,
-                                StorageInterface $storage,
-                                DocumentFactory $documentFactory,
-                                ContentExtractorInterface $contentExtractor,
-                                SiteManager $siteManager,
-                                $defaultLanguage)
+    public function __construct(
+        StorageInterface $storage,
+        MediaDocumentMapper $mapper,
+        JobManagerInterface $jobManager,
+        LoggerInterface $logger)
     {
-        $this->dispatcher = $dispatcher;
         $this->storage = $storage;
-        $this->documentFactory = $documentFactory;
-        $this->contentExtractor = $contentExtractor;
-        $this->siteManager = $siteManager;
-        $this->defaultLanguage = $defaultLanguage;
+        $this->mapper = $mapper;
+        $this->jobManager = $jobManager;
+        $this->logger = $logger;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getLabel()
+    public function getName()
     {
         return 'Media indexer';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getType()
+    {
+        return 'media';
     }
 
     /**
@@ -101,215 +90,114 @@ class MediaIndexer extends AbstractIndexer
     /**
      * {@inheritdoc}
      */
-    public function getDocumentFactory()
+    public function supports($identifier)
     {
-        return $this->documentFactory;
+        return $identifier instanceof MediaDocument || preg_match('/^media_[0-9a-fA-F-]+_\d+$/', $identifier);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDocumentClass()
+    public function add($identifier, $viaQueue = false)
     {
-        return 'Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument';
+        $document = $this->mapper->map($identifier);
+
+        if (!$document) {
+            return false;
+        }
+
+        $commands = $this->storage->createCommands()
+            ->addDocument($document)
+            ->commit();
+
+        if (!$viaQueue) {
+            $this->storage->runCommands($commands);
+        } else {
+            $this->storage->queueCommands($commands);
+        }
+
+        return true;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getAllIdentifiers()
+    public function update($identifier, $viaQueue = false)
     {
-        $indexIdentifiers = array();
+        $document = $this->mapper->map($identifier);
 
-        $sites = $this->siteManager->getAll();
-
-        foreach ($sites as $site) {
-            /* @var $site SiteInterface */
-
-            $rii = new \RecursiveIteratorIterator($site->getIterator(), \RecursiveIteratorIterator::SELF_FIRST);
-
-            foreach ($rii as $folder) {
-                /* @var $folder FolderInterface */
-
-                $files = $site->findFilesByFolder($folder);
-
-                foreach ($files as $file) {
-                    /* @var $file FileInterface */
-
-                    $fileId = $file->getId();
-                    $fileVersion = $file->getVersion();
-
-                    $identifier = 'file_' . $fileId . '_' . $fileVersion;
-
-                    $indexIdentifiers[] = $identifier;
-                }
-            }
+        if (!$document) {
+            return false;
         }
 
-        return $indexIdentifiers;
+        $commands = $this->storage->createCommands()
+            ->updateDocument($document)
+            ->commit();
+
+        if (!$viaQueue) {
+            $this->storage->runCommands($commands);
+        } else {
+            $this->storage->queueCommands($commands);
+        }
+
+        return true;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDocumentByIdentifier($id)
+    public function delete($identifier, $viaQueue = false)
     {
-        // extract identifier parts from id
-        list($prefix, $fileId, $fileVersion) = explode('_', $id);
+        $document = $this->mapper->map($identifier);
 
-        // get file object
-        $site = $this->siteManager->getByFileId($fileId);
-        $file = $site->findFile($fileId, $fileVersion);
-        $folder = $site->findFolder($file->getFolderId());
+        if (!$document) {
+            return false;
+        }
 
-        $document = $this->mapFileToDocument($file, $folder, $site, $id);
+        $commands = $this->storage->createCommands()
+            ->deleteDocument($document)
+            ->commit();
 
-        return $document;
+        if (!$viaQueue) {
+            $this->storage->runCommands($commands);
+        } else {
+            $this->storage->queueCommands($commands);
+        }
+
+        return true;
     }
 
     /**
-     * Create document and fill it with values.
-     *
-     * @param FileInterface   $file
-     * @param FolderInterface $folder
-     * @param SiteInterface   $site
-     * @param integer         $id
-     *
-     * @return DocumentInterface
+     * {@inheritdoc}
      */
-    private function mapFileToDocument(FileInterface $file, FolderInterface $folder, SiteInterface $site, $id)
+    public function indexAll($viaQueue = false)
     {
-        // TODO do we need boosting?
+        $documentIds = $this->mapper->findIdentifiers();
 
-        // extract content
-        $content = $this->extractContent($file);
+        $commands = $this->storage->createCommands();
 
-        // Field: readablefilesize
-        $formatter = new FilesizeFormatter();
-        $readableFileSize = $formatter->formatFilesize($file->getSize());
+        $cnt = 0;
+        foreach ($documentIds as $documentId) {
+            $document = $this->mapper->map($documentId);
 
-        // Field: url
-        $url = '/download/' . $file->getId() . '/' . $file->getName();
-
-        // Field: Parent Folder IDs
-
-        $parentFolderIds = array();
-        $parentFolder  = $folder;
-
-        while ($parentFolder) {
-            $parentFolderIds[] = $parentFolder->getId();
-            if (!$parentFolder->getParentId()) {
-                break;
+            if (!$document) {
+                $this->logger->error("Document $documentId could not be loaded.");
+                continue;
             }
-            $parentFolder = $site->findFolder($parentFolder->getParentId());
+
+            $commands->addDocument($document);
+
+            $cnt++;
         }
 
-        $tags = '';
+        $commands->commit();
 
-        $document = $this->createDocument();
-
-        $document
-            ->setIdentifier($id)
-            ->setValue('title', $file->getName())
-            ->setValue('tags', $tags)
-            ->setValue('folder_id', $file->getFolderID())
-            ->setValue('parent_folder_ids', $parentFolderIds)
-            ->setValue('file_id', $file->getID())
-            ->setValue('file_version', $file->getVersion())
-            ->setValue('filename', $file->getName())
-            ->setValue('url', $url)
-            ->setValue('mime_type', $file->getMimeType())
-            ->setValue('asset_type', $file->getAssetType())
-            ->setValue('document_type', $file->getDocumenttype())
-            ->setValue('filesize', $file->getSize())
-            ->setValue('readable_filesize', $readableFileSize)
-            ->setValue('content', $content);
-
-        // process meta data
-        /*
-        $metaLanguage = $this->getMetaLanguage($file);
-        $meta         = $asset->getMeta($metaLanguage);
-
-        foreach ($meta as $metaKey => $metaField)
-        {
-            $metaFieldType  = $metaField['type'];
-
-            if ('suggest' === $metaFieldType)
-            {
-                $metaFieldValue = (array) $metaField['value'];
-            }
-            else
-            {
-                $metaFieldValue = $metaField['value'];
-            }
-
-            $document->setValue('meta_' . $metaKey, $metaFieldValue, true);
-
-
-            // overwrite title with title from meta information if available
-            if ($document->hasValue('meta_title'))
-            {
-                $metaTitle = $document->getValue('meta_title');
-
-                if (mb_strlen($metaTitle))
-                {
-                    $document->setValue('title', $metaTitle);
-                }
-            }
+        if (!$viaQueue) {
+            $this->storage->runCommands($commands);
+        } else {
+            $this->storage->queueCommands($commands);
         }
-        */
 
-        $event = new MapDocumentEvent($document, $file);
-        $this->dispatcher->dispatch(IndexerMediaEvents::MAP_DOCUMENT, $event);
-
-        return $document;
+        return $cnt;
     }
-
-    /**
-     * Extract content from asset.
-     *
-     * @param FileInterface $file
-     *
-     * @return string
-     */
-    private function extractContent(FileInterface $file)
-    {
-        // parse content
-        $content = trim((string) $this->contentExtractor->extract($file));
-
-        if (!$content) {
-            return null;
-        }
-
-        // Remove NL, CR, TABs
-        $content = str_replace(array("\r", "\n", "\t"), ' ', $content);
-
-        // Remove multiple whitespaces
-        $content = preg_replace('/\s+/u', ' ', $content);
-
-        // trim content
-        $content = trim($content);
-
-        return $content;
-    }
-
-    /**
-     * @param FileInterface $file
-     *
-     * @return string
-     */
-    private function getMetaLanguage(FileInterface $file)
-    {
-        // use meta default language as fallback
-        $metaLanguage = $this->defaultLanguage;
-
-        $meta = $file->getMeta($metaLanguage);
-        if (isset($meta['language']['value']) && strlen($meta['language']['value'])) {
-            // use the language of the document for indexing meta informations
-            $metaLanguage = $meta['language']['value'];
-        }
-
-        return $metaLanguage;
-    }
-
 }
