@@ -42,4 +42,12 @@ class MediaDocument extends Document
             )
         );
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getName()
+    {
+        return 'media';
+    }
 }
