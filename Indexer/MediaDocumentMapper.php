@@ -10,7 +10,6 @@ namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
-use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Event\MapDocumentEvent;
 use Phlexible\Bundle\IndexerMediaBundle\IndexerMediaEvents;
 use Phlexible\Bundle\MediaExtractorBundle\Extractor\ExtractorInterface;
@@ -145,6 +144,10 @@ class MediaDocumentMapper
         $file = $volume->findFile($fileId, $fileVersion);
         $folder = $volume->findFolder($file->getFolderId());
 
+        if (!file_exists($file->getPhysicalPath())) {
+            return null;
+        }
+
         $document = $this->mapFileToDocument($file, $folder, $volume, $identifier);
 
         return $document;
@@ -191,27 +194,30 @@ class MediaDocumentMapper
 
         $document = $this->documentFactory->factory($this->getDocumentClass());
 
+        $content = base64_encode(file_get_contents($file->getPhysicalPath()));
+
         $document
             ->setIdentifier($id)
-            ->setValue('title', $file->getName())
-            ->setValue('tags', $tags)
-            ->setValue('folder_id', $file->getFolderID())
-            ->setValue('parent_folder_ids', $parentFolderIds)
-            ->setValue('file_id', $file->getID())
-            ->setValue('file_version', $file->getVersion())
-            ->setValue('filename', $file->getName())
-            ->setValue('url', $url)
-            ->setValue('mime_type', $file->getMimeType())
-            ->setValue('asset_type', $file->getAssetType())
-            ->setValue('document_type', $file->getDocumenttype())
-            ->setValue('filesize', $file->getSize())
-            ->setValue('readable_filesize', $readableFileSize)
+            ->set('title', $file->getName())
+            ->set('tags', $tags)
+            ->set('folder_id', $file->getFolderID())
+            ->set('parent_folder_ids', $parentFolderIds)
+            ->set('file_id', $file->getID())
+            ->set('file_version', $file->getVersion())
+            ->set('filename', $file->getName())
+            ->set('url', $url)
+            ->set('mime_type', $file->getMimeType())
+            ->set('media_category', $file->getMediaCategory())
+            ->set('media_type', $file->getMediaType())
+            ->set('filesize', $file->getSize())
+            ->set('readable_filesize', $readableFileSize)
             //->setValue('content', $content)
-            ->setValue('content', array(
+            #->setValue('mediafile', $content);
+            ->set('mediafile', array(
                 '_content_type' => $file->getMimeType(),
-                '_name' => $file->getName(),
-                'content' => base64_encode(file_get_contents($file->getPhysicalPath())))
-            );
+                '_name'         => $file->getName(),
+                '_content'      => $content
+            ));
 
         // process meta data
         // TODO: enable

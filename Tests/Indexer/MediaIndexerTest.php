@@ -59,7 +59,7 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
 
     public function testSupportedIdentifier()
     {
-        $this->assertTrue($this->indexer->supports('file_550e8400-e29b-11d4-a716-446655440000_1'));
+        $this->assertTrue($this->indexer->supports('media_550e8400-e29b-11d4-a716-446655440000_1'));
     }
 
     public function testUnsupportedIdentifier()

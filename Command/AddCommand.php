@@ -40,17 +40,17 @@ class AddCommand extends ContainerAwareCommand
     {
         ini_set('memory_limit', -1);
 
-        $treeId = $input->getArgument('treeId');
-        $language = $input->getArgument('language');
+        $fileId = $input->getArgument('fileId');
+        $fileVersion = $input->getArgument('fileVersion');
 
-        $indexer = $this->getContainer()->get('phlexible_indexer_element.element_indexer');
+        $indexer = $this->getContainer()->get('phlexible_indexer_media.media_indexer');
         $storage = $indexer->getStorage();
 
         $output->writeln('Indexer: ' . $indexer->getName());
         $output->writeln('  Storage: ' . get_class($storage));
         $output->writeln('    DSN: ' . $storage->getConnectionString());
 
-        $identifier = "treenode_{$treeId}_{$language}";
+        $identifier = "media_{$fileId}_{$fileVersion}";
 
         if (!$indexer->add($identifier)) {
             $output->writeln("<error>Document $identifier could not be loaded.</error>");

@@ -90,6 +90,14 @@ class MediaIndexer implements IndexerInterface
     /**
      * {@inheritdoc}
      */
+    public function getDocumentClass()
+    {
+        return $this->mapper->getDocumentClass();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function supports($identifier)
     {
         return $identifier instanceof MediaDocument || preg_match('/^media_[0-9a-fA-F-]{36}_\d+$/', $identifier);

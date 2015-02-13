@@ -9,7 +9,7 @@
 namespace Phlexible\Bundle\IndexerMediaBundle\Event;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
-use Phlexible\Bundle\MediaSiteBundle\Model\FileInterface;
+use Phlexible\Component\Volume\Model\FileInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 /**

@@ -10,13 +10,10 @@ namespace Phlexible\Bundle\IndexerMediaBundle\EventListener;
 
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer;
 use Phlexible\Bundle\MediaManagerBundle\Event\SaveMetaEvent;
-use Phlexible\Bundle\QueueBundle\Entity\Job;
-use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
 use Phlexible\Component\Volume\Event\CreateFileEvent;
 use Phlexible\Component\Volume\Event\FileEvent;
 use Phlexible\Component\Volume\Event\MoveFileEvent;
 use Phlexible\Component\Volume\Event\ReplaceFileEvent;
-use Phlexible\Component\Volume\Model\FileInterface;
 use Phlexible\Component\Volume\VolumeEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
