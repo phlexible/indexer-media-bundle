@@ -92,7 +92,7 @@ class MediaIndexer implements IndexerInterface
      */
     public function supports($identifier)
     {
-        return $identifier instanceof MediaDocument || preg_match('/^file_[0-9a-fA-F-]{36}_\d+$/', $identifier);
+        return $identifier instanceof MediaDocument || preg_match('/^media_[0-9a-fA-F-]{36}_\d+$/', $identifier);
     }
 
     /**

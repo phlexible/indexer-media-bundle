@@ -122,7 +122,7 @@ class MediaDocumentMapper
                     $fileId = $file->getId();
                     $fileVersion = $file->getVersion();
 
-                    $identifier = 'file_' . $fileId . '_' . $fileVersion;
+                    $identifier = sprintf('%s_%s_%s', 'media', $fileId, $fileVersion);
 
                     $indexIdentifiers[] = $identifier;
                 }
@@ -165,7 +165,7 @@ class MediaDocumentMapper
         // TODO do we need boosting?
 
         // extract content
-        $content = $this->extractContent($file);
+        //$content = $this->extractContent($file);
 
         // Field: readablefilesize
         $formatter = new FilesizeFormatter();
@@ -206,7 +206,12 @@ class MediaDocumentMapper
             ->setValue('document_type', $file->getDocumenttype())
             ->setValue('filesize', $file->getSize())
             ->setValue('readable_filesize', $readableFileSize)
-            ->setValue('content', $content);
+            //->setValue('content', $content)
+            ->setValue('content', array(
+                '_content_type' => $file->getMimeType(),
+                '_name' => $file->getName(),
+                'content' => base64_encode(file_get_contents($file->getPhysicalPath())))
+            );
 
         // process meta data
         // TODO: enable

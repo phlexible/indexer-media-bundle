@@ -24,8 +24,9 @@ class MediaDocument extends Document
                 'title'             => array('type' => self::TYPE_STRING),
                 'highlight_title'   => array('type' => self::TYPE_STRING, 'readonly' => true),
                 'tags'              => array('type' => self::TYPE_TEXT, 'array' => true, 'readonly' => true),
-                'copy'              => array('type' => self::TYPE_TEXT, 'array' => true,'readonly' => true),
-                'content'           => array('type' => self::TYPE_STRING, 'copyFields' => array('copy')),
+                //'copy'              => array('type' => self::TYPE_TEXT, 'array' => true,'readonly' => true),
+                //'content'           => array('type' => self::TYPE_STRING, 'copyFields' => array('copy')),
+                'content'        => array('type' => 'attachment'),
 
                 'folder_id'         => array('type' => self::TYPE_STRING),
                 'parent_folder_ids' => array('type' => self::TYPE_STRING, 'array' => true),
