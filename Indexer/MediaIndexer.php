@@ -14,7 +14,6 @@ use Phlexible\Bundle\IndexerBundle\Indexer\IndexerInterface;
 use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
-use Phlexible\Component\Formatter\FilesizeFormatter;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -114,14 +113,14 @@ class MediaIndexer implements IndexerInterface
             return false;
         }
 
-        $commands = $this->storage->createCommands()
+        $operations = $this->storage->createOperations()
             ->addDocument($document)
             ->commit();
 
         if (!$viaQueue) {
-            $this->storage->runCommands($commands);
+            $this->storage->execute($operations);
         } else {
-            $this->storage->queueCommands($commands);
+            $this->storage->queue($operations);
         }
 
         return true;
@@ -138,14 +137,14 @@ class MediaIndexer implements IndexerInterface
             return false;
         }
 
-        $commands = $this->storage->createCommands()
+        $operations = $this->storage->createOperations()
             ->updateDocument($document)
             ->commit();
 
         if (!$viaQueue) {
-            $this->storage->runCommands($commands);
+            $this->storage->execute($operations);
         } else {
-            $this->storage->queueCommands($commands);
+            $this->storage->queue($operations);
         }
 
         return true;
@@ -162,14 +161,14 @@ class MediaIndexer implements IndexerInterface
             return false;
         }
 
-        $commands = $this->storage->createCommands()
+        $operations = $this->storage->createOperations()
             ->deleteDocument($document)
             ->commit();
 
         if (!$viaQueue) {
-            $this->storage->runCommands($commands);
+            $this->storage->execute($operations);
         } else {
-            $this->storage->queueCommands($commands);
+            $this->storage->queue($operations);
         }
 
         return true;
@@ -182,7 +181,7 @@ class MediaIndexer implements IndexerInterface
     {
         $documentIds = $this->mapper->findIdentifiers();
 
-        $commands = $this->storage->createCommands();
+        $operations = $this->storage->createOperations();
 
         $cnt = 0;
         foreach ($documentIds as $documentId) {
@@ -193,17 +192,17 @@ class MediaIndexer implements IndexerInterface
                 continue;
             }
 
-            $commands->addDocument($document);
+            $operations->addDocument($document);
 
             $cnt++;
         }
 
-        $commands->commit();
+        $operations->commit();
 
         if (!$viaQueue) {
-            $this->storage->runCommands($commands);
+            $this->storage->execute($operations);
         } else {
-            $this->storage->queueCommands($commands);
+            $this->storage->queue($operations);
         }
 
         return $cnt;
