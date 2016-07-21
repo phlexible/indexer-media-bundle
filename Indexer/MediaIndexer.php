@@ -8,14 +8,12 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
-use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
+use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
 use Phlexible\Bundle\IndexerBundle\Indexer\IndexerInterface;
 use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
-use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Media indexer
@@ -97,17 +95,17 @@ class MediaIndexer implements IndexerInterface
     /**
      * {@inheritdoc}
      */
-    public function supports($identifier)
+    public function supports(DocumentIdentity $identity)
     {
-        return $identifier instanceof MediaDocument || preg_match('/^media_[0-9a-fA-F-]{36}_\d+$/', $identifier);
+        return (bool) preg_match('/^media_[0-9a-fA-F-]{36}_\d+$/', (string) $identity);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function add($identifier, $viaQueue = false)
+    public function add(DocumentIdentity $identity, $viaQueue = false)
     {
-        $document = $this->mapper->map($identifier);
+        $document = $this->mapper->map($identity);
 
         if (!$document) {
             return false;
@@ -129,9 +127,9 @@ class MediaIndexer implements IndexerInterface
     /**
      * {@inheritdoc}
      */
-    public function update($identifier, $viaQueue = false)
+    public function update(DocumentIdentity $identity, $viaQueue = false)
     {
-        $document = $this->mapper->map($identifier);
+        $document = $this->mapper->map($identity);
 
         if (!$document) {
             return false;
@@ -153,9 +151,9 @@ class MediaIndexer implements IndexerInterface
     /**
      * {@inheritdoc}
      */
-    public function delete($identifier, $viaQueue = false)
+    public function delete(DocumentIdentity $identity, $viaQueue = false)
     {
-        $document = $this->mapper->map($identifier);
+        $document = $this->mapper->map($identity);
 
         if (!$document) {
             return false;
@@ -206,5 +204,15 @@ class MediaIndexer implements IndexerInterface
         }
 
         return $cnt;
+    }
+
+    /**
+     * @return DocumentInterface
+     */
+    public function createDocument()
+    {
+        $class = $this->mapper->getDocumentClass();
+
+        return new $class();
     }
 }

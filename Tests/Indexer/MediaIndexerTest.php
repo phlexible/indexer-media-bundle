@@ -2,6 +2,7 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Tests\Indexer;
 
+use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerBundle\Storage\Operation\Operations;
 use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
@@ -59,12 +60,12 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
 
     public function testSupportedIdentifier()
     {
-        $this->assertTrue($this->indexer->supports('media_550e8400-e29b-11d4-a716-446655440000_1'));
+        $this->assertTrue($this->indexer->supports(new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440000_1')));
     }
 
     public function testUnsupportedIdentifier()
     {
-        $this->assertFalse($this->indexer->supports('test'));
+        $this->assertFalse($this->indexer->supports(new DocumentIdentity('test')));
     }
 
     public function testAdd()
@@ -72,7 +73,7 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
-        $this->indexer->add('testIdentifier');
+        $this->indexer->add(new DocumentIdentity('testIdentifier'));
     }
 
     public function testAddWithQueue()
@@ -80,7 +81,7 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 
-        $this->indexer->add('testIdentifier', true);
+        $this->indexer->add(new DocumentIdentity('testIdentifier'), true);
     }
 
     public function testAddWithoutDocument()
@@ -89,8 +90,8 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
-        $this->indexer->add('testIdentifier');
-        $this->indexer->add('testIdentifier', true);
+        $this->indexer->add(new DocumentIdentity('testIdentifier'));
+        $this->indexer->add(new DocumentIdentity('testIdentifier'), true);
     }
 
     public function testUpdate()
@@ -98,7 +99,7 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
-        $this->indexer->update('testIdentifier');
+        $this->indexer->update(new DocumentIdentity('testIdentifier'));
     }
 
     public function testUpdateWithQueue()
@@ -106,7 +107,7 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 
-        $this->indexer->update('testIdentifier', true);
+        $this->indexer->update(new DocumentIdentity('testIdentifier'), true);
     }
 
     public function testUpdateWithoutDocument()
@@ -115,8 +116,8 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
-        $this->indexer->update('testIdentifier');
-        $this->indexer->update('testIdentifier', true);
+        $this->indexer->update(new DocumentIdentity('testIdentifier'));
+        $this->indexer->update(new DocumentIdentity('testIdentifier'), true);
     }
 
     public function testDelete()
@@ -124,7 +125,7 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
-        $this->indexer->delete('testIdentifier');
+        $this->indexer->delete(new DocumentIdentity('testIdentifier'));
     }
 
     public function testDeleteWithQueue()
@@ -132,7 +133,7 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 
-        $this->indexer->delete('testIdentifier', true);
+        $this->indexer->delete(new DocumentIdentity('testIdentifier'), true);
     }
 
     public function testDeleteWithoutDocument()
@@ -141,8 +142,8 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
-        $this->indexer->delete('testIdentifier');
-        $this->indexer->delete('testIdentifier', true);
+        $this->indexer->delete(new DocumentIdentity('testIdentifier'));
+        $this->indexer->delete(new DocumentIdentity('testIdentifier'), true);
     }
 
     public function testIndexAll()
