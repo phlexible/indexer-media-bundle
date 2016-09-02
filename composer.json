@@ -21,7 +21,7 @@
     "repositories": [
         {
             "type": "composer",
-            "url": "https://packages.brainbits.net/phlexible-bundles/"
+            "url": "https://packages.brainbits.net/repo/private/"
         }
     ],
     "extra": {
