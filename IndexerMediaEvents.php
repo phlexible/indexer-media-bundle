@@ -12,7 +12,7 @@
 namespace Phlexible\Bundle\IndexerMediaBundle;
 
 /**
- * Media indexer events
+ * Media indexer events.
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
@@ -20,7 +20,7 @@ class IndexerMediaEvents
 {
     /**
      * Map Document Event
-     * Fired when a document is mapped
+     * Fired when a document is mapped.
      */
     const MAP_DOCUMENT = 'phlexible_indexer_media.map_document';
 }

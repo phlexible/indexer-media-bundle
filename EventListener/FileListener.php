@@ -21,7 +21,7 @@ use Phlexible\Component\Volume\VolumeEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * File listener
+ * File listener.
  *
  * @author Phillip Look <pl@brainbits.net>
  */
@@ -47,10 +47,10 @@ class FileListener implements EventSubscriberInterface
     {
         // TODO: activate
         return array(
-            VolumeEvents::CREATE_FILE  => 'onCreateFile',
+            VolumeEvents::CREATE_FILE => 'onCreateFile',
             VolumeEvents::REPLACE_FILE => 'onReplaceFile',
-            VolumeEvents::MOVE_FILE    => 'onMoveFile',
-            VolumeEvents::DELETE_FILE  => 'onDeleteFile',
+            VolumeEvents::MOVE_FILE => 'onMoveFile',
+            VolumeEvents::DELETE_FILE => 'onDeleteFile',
             //VolumeEvents::DELETE_FILE => 'onSaveMeta',
         );
     }

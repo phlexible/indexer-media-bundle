@@ -16,7 +16,7 @@ use Phlexible\Component\Volume\Model\FileInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
- * Map document event
+ * Map document event.
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
@@ -39,7 +39,7 @@ class MapDocumentEvent extends Event
     public function __construct(DocumentInterface $document, FileInterface $file)
     {
         $this->document = $document;
-        $this->file     = $file;
+        $this->file = $file;
     }
 
     /**
