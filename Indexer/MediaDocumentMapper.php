@@ -25,7 +25,7 @@ use Phlexible\Component\Volume\VolumeManager;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Media indexer
+ * Media indexer.
  *
  * @author Phillip Look <pl@brainbits.net>
  */
@@ -162,7 +162,7 @@ class MediaDocumentMapper
      * @param FileInterface   $file
      * @param FolderInterface $folder
      * @param VolumeInterface $volume
-     * @param integer         $id
+     * @param int             $id
      *
      * @return DocumentInterface
      */
@@ -178,12 +178,12 @@ class MediaDocumentMapper
         $readableFileSize = $formatter->formatFilesize($file->getSize());
 
         // Field: url
-        $url = '/download/' . $file->getId() . '/' . $file->getName();
+        $url = '/download/'.$file->getId().'/'.$file->getName();
 
         // Field: Parent Folder IDs
 
         $parentFolderIds = array();
-        $parentFolder  = $folder;
+        $parentFolder = $folder;
 
         while ($parentFolder) {
             $parentFolderIds[] = $parentFolder->getId();
@@ -215,11 +215,11 @@ class MediaDocumentMapper
             ->set('filesize', $file->getSize())
             ->set('readable_filesize', $readableFileSize)
             //->setValue('content', $content)
-            #->setValue('mediafile', $content);
+            //->setValue('mediafile', $content);
             ->set('mediafile', array(
                 '_content_type' => $file->getMimeType(),
-                '_name'         => $file->getName(),
-                '_content'      => $content
+                '_name' => $file->getName(),
+                '_content' => $content,
             ));
 
         // process meta data
@@ -309,5 +309,4 @@ class MediaDocumentMapper
 
         return $metaLanguage;
     }
-
 }

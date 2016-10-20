@@ -17,7 +17,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Add all command
+ * Add all command.
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
@@ -47,9 +47,9 @@ class AddAllCommand extends ContainerAwareCommand
         $indexer = $this->getContainer()->get('phlexible_indexer_media.media_indexer');
         $storage = $indexer->getStorage();
 
-        $output->writeln('Indexer: ' . $indexer->getName());
-        $output->writeln('  Storage: ' . get_class($storage));
-        $output->writeln('    DSN: ' . $storage->getConnectionString());
+        $output->writeln('Indexer: '.$indexer->getName());
+        $output->writeln('  Storage: '.get_class($storage));
+        $output->writeln('    DSN: '.$storage->getConnectionString());
 
         $viaQueue = $input->getOption('queue');
 
@@ -67,5 +67,4 @@ class AddAllCommand extends ContainerAwareCommand
 
         return 0;
     }
-
 }

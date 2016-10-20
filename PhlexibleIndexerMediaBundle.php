@@ -14,9 +14,7 @@ namespace Phlexible\Bundle\IndexerMediaBundle;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
- * Media indexer bundle
- *
- * @package Media_IndexerMedia
+ * Media indexer bundle.
  */
 class PhlexibleIndexerMediaBundle extends Bundle
 {

@@ -19,7 +19,7 @@ use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Media indexer
+ * Media indexer.
  *
  * @author Phillip Look <pl@brainbits.net>
  */
@@ -195,7 +195,7 @@ class MediaIndexer implements IndexerInterface
 
             $operations->addDocument($document);
 
-            $cnt++;
+            ++$cnt;
         }
 
         $operations->commit();
