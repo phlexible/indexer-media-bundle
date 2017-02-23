@@ -13,6 +13,7 @@ namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
+use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Phlexible\Bundle\IndexerMediaBundle\Event\MapDocumentEvent;
 use Phlexible\Bundle\IndexerMediaBundle\IndexerMediaEvents;
 use Phlexible\Component\Formatter\FilesizeFormatter;
@@ -98,7 +99,7 @@ class MediaDocumentMapper
      */
     public function getDocumentClass()
     {
-        return 'Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument';
+        return MediaDocument::class;
     }
 
     /**
