@@ -18,11 +18,17 @@ use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentMapper;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
+use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\Prophecy\ObjectProphecy;
 use Psr\Log\LoggerInterface;
 
-class MediaIndexerTest extends \PHPUnit_Framework_TestCase
+/**
+ * Media indexer test.
+ *
+ * @covers \Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer
+ */
+class MediaIndexerTest extends TestCase
 {
     /**
      * @var MediaIndexer
@@ -51,10 +57,10 @@ class MediaIndexerTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->storage = $this->prophesize('Phlexible\Bundle\IndexerBundle\Storage\StorageInterface');
-        $this->mapper = $this->prophesize('Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentMapper');
-        $this->jobManager = $this->prophesize('Phlexible\Bundle\QueueBundle\Model\JobManagerInterface');
-        $this->logger = $this->prophesize('Psr\Log\LoggerInterface');
+        $this->storage = $this->prophesize(StorageInterface::class);
+        $this->mapper = $this->prophesize(MediaDocumentMapper::class);
+        $this->jobManager = $this->prophesize(JobManagerInterface::class);
+        $this->logger = $this->prophesize(LoggerInterface::class);
 
         $this->storage->createOperations()->willReturn(new Operations());
         $this->mapper->map('testIdentifier')->willReturn(new MediaDocument());
