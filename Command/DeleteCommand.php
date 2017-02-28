@@ -11,6 +11,7 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Command;
 
+use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -53,12 +54,12 @@ class DeleteCommand extends ContainerAwareCommand
         $output->writeln('  Storage: '.get_class($storage));
         $output->writeln('    DSN: '.$storage->getConnectionString());
 
-        $identifier = "file_{$fileId}_{$fileVersion}";
+        $identity = new DocumentIdentity("media_{$fileId}_{$fileVersion}");
 
-        $commands = $storage->createCommands();
-        $commands->delete($identifier);
+        $operations = $storage->createOperations();
+        $operations->deleteIdentity($identity);
 
-        $storage->runCommands($commands);
+        $storage->execute($operations);
 
         return 0;
     }

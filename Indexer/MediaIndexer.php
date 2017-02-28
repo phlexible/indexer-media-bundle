@@ -180,16 +180,16 @@ class MediaIndexer implements IndexerInterface
      */
     public function indexAll($viaQueue = false)
     {
-        $documentIds = $this->mapper->findIdentifiers();
+        $documentIds = $this->mapper->findIdentities();
 
         $operations = $this->storage->createOperations();
 
         $cnt = 0;
-        foreach ($documentIds as $documentId) {
-            $document = $this->mapper->map($documentId);
+        foreach ($documentIds as $identifier) {
+            $document = $this->mapper->map($identifier);
 
             if (!$document) {
-                $this->logger->error("Document $documentId could not be loaded.");
+                $this->logger->error("Document $identifier could not be loaded.");
                 continue;
             }
 

@@ -163,9 +163,9 @@ class MediaIndexerTest extends TestCase
 
     public function testIndexAll()
     {
-        $this->mapper->findIdentifiers()->willReturn(array('file_550e8400-e29b-11d4-a716-446655440000_1', 'file_550e8400-e29b-11d4-a716-446655440001_2'));
-        $this->mapper->map('file_550e8400-e29b-11d4-a716-446655440000_1')->willReturn(new MediaDocument());
-        $this->mapper->map('file_550e8400-e29b-11d4-a716-446655440001_2')->willReturn(new MediaDocument());
+        $this->mapper->findIdentities()->willReturn(array(new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440000_1'), new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440001_2')));
+        $this->mapper->map('media_550e8400-e29b-11d4-a716-446655440000_1')->willReturn(new MediaDocument());
+        $this->mapper->map('media_550e8400-e29b-11d4-a716-446655440001_2')->willReturn(new MediaDocument());
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
@@ -174,9 +174,9 @@ class MediaIndexerTest extends TestCase
 
     public function testIndexAllWithQueue()
     {
-        $this->mapper->findIdentifiers()->willReturn(array('file_550e8400-e29b-11d4-a716-446655440000_1', 'file_550e8400-e29b-11d4-a716-446655440001_2'));
-        $this->mapper->map('file_550e8400-e29b-11d4-a716-446655440000_1')->willReturn(new MediaDocument());
-        $this->mapper->map('file_550e8400-e29b-11d4-a716-446655440001_2')->willReturn(new MediaDocument());
+        $this->mapper->findIdentities()->willReturn(array(new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440000_1'), new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440001_2')));
+        $this->mapper->map('media_550e8400-e29b-11d4-a716-446655440000_1')->willReturn(new MediaDocument());
+        $this->mapper->map('media_550e8400-e29b-11d4-a716-446655440001_2')->willReturn(new MediaDocument());
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 

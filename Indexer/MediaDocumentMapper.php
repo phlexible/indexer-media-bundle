@@ -12,6 +12,7 @@
 namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
+use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Phlexible\Bundle\IndexerMediaBundle\Event\MapDocumentEvent;
@@ -123,9 +124,9 @@ class MediaDocumentMapper
     /**
      * {@inheritdoc}
      */
-    public function findIdentifiers()
+    public function findIdentities()
     {
-        $indexIdentifiers = array();
+        $indexIdentities = array();
 
         foreach ($this->volumeManager->all() as $volume) {
             /* @var $volume VolumeInterface */
@@ -145,21 +146,21 @@ class MediaDocumentMapper
 
                     $identifier = sprintf('%s_%s_%s', 'media', $fileId, $fileVersion);
 
-                    $indexIdentifiers[] = $identifier;
+                    $indexIdentities[] = new DocumentIdentity($identifier);
                 }
             }
         }
 
-        return $indexIdentifiers;
+        return $indexIdentities;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function map($identifier)
+    public function map(DocumentIdentity $identity)
     {
         // extract identifier parts from id
-        list($prefix, $fileId, $fileVersion) = explode('_', $identifier);
+        list($prefix, $fileId, $fileVersion) = explode('_', $identity);
 
         // get file object
         $volume = $this->volumeManager->getByFileId($fileId);
@@ -170,7 +171,7 @@ class MediaDocumentMapper
             return null;
         }
 
-        $document = $this->mapFileToDocument($file, $folder, $volume, $identifier);
+        $document = $this->mapFileToDocument($file, $folder, $volume, $identity);
 
         return $document;
     }
@@ -178,15 +179,19 @@ class MediaDocumentMapper
     /**
      * Create document and fill it with values.
      *
-     * @param FileInterface   $file
-     * @param FolderInterface $folder
-     * @param VolumeInterface $volume
-     * @param int             $id
+     * @param FileInterface    $file
+     * @param FolderInterface  $folder
+     * @param VolumeInterface  $volume
+     * @param DocumentIdentity $identity
      *
      * @return DocumentInterface
      */
-    private function mapFileToDocument(FileInterface $file, FolderInterface $folder, VolumeInterface $volume, $id)
-    {
+    private function mapFileToDocument(
+        FileInterface $file,
+        FolderInterface $folder,
+        VolumeInterface $volume,
+        DocumentIdentity $identity
+    ) {
         // TODO do we need boosting?
 
         // extract content
@@ -217,7 +222,7 @@ class MediaDocumentMapper
         $content = base64_encode(file_get_contents($file->getPhysicalPath()));
 
         $document
-            ->setIdentity($id)
+            ->setIdentity($identity)
             ->set('title', $file->getName())
             ->set('folder_id', $file->getFolderID())
             ->set('parent_folder_ids', $parentFolderIds)
