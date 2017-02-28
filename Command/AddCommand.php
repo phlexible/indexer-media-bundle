@@ -11,6 +11,7 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Command;
 
+use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -53,7 +54,7 @@ class AddCommand extends ContainerAwareCommand
         $output->writeln('  Storage: '.get_class($storage));
         $output->writeln('    DSN: '.$storage->getConnectionString());
 
-        $identifier = "media_{$fileId}_{$fileVersion}";
+        $identifier = new DocumentIdentity("media_{$fileId}_{$fileVersion}");
 
         if (!$indexer->add($identifier)) {
             $output->writeln("<error>Document $identifier could not be loaded.</error>");

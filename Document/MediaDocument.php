@@ -29,7 +29,12 @@ class MediaDocument extends Document
                 'tags' => array('type' => self::TYPE_TEXT, 'array' => true, 'readonly' => true),
                 //'copy'              => array('type' => self::TYPE_TEXT, 'array' => true,'readonly' => true),
                 'content' => array('type' => self::TYPE_STRING),
-                'mediafile' => array('type' => 'attachment'),
+                'mediafile' => array('type' => 'attachment', 'fields' => array(
+                    'content' => array('store' => false, 'index' => true),
+                    'name' => array('store' => true, 'index' => true),
+                    'content_type' => array('store' => true, 'index' => true),
+
+                )),
 
                 'folder_id' => array('type' => self::TYPE_STRING),
                 'parent_folder_ids' => array('type' => self::TYPE_STRING, 'array' => true),

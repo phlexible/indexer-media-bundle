@@ -200,7 +200,7 @@ class MediaDocumentMapper
         $content = base64_encode(file_get_contents($file->getPhysicalPath()));
 
         $document
-            ->setIdentifier($id)
+            ->setIdentity($id)
             ->set('title', $file->getName())
             ->set('tags', $tags)
             ->set('folder_id', $file->getFolderID())
