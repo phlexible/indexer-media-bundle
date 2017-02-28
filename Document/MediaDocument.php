@@ -26,14 +26,13 @@ class MediaDocument extends Document
             array(
                 'title' => array('type' => self::TYPE_STRING),
                 'highlight_title' => array('type' => self::TYPE_STRING, 'readonly' => true),
-                'tags' => array('type' => self::TYPE_TEXT, 'array' => true, 'readonly' => true),
+                'tags' => array('type' => self::TYPE_TEXT, 'array' => true),
                 //'copy'              => array('type' => self::TYPE_TEXT, 'array' => true,'readonly' => true),
                 'content' => array('type' => self::TYPE_STRING),
                 'mediafile' => array('type' => 'attachment', 'fields' => array(
                     'content' => array('store' => false, 'index' => true),
                     'name' => array('store' => true, 'index' => true),
                     'content_type' => array('store' => true, 'index' => true),
-
                 )),
 
                 'folder_id' => array('type' => self::TYPE_STRING),
@@ -47,6 +46,7 @@ class MediaDocument extends Document
                 'media_type' => array('type' => self::TYPE_STRING),
                 'filesize' => array('type' => self::TYPE_INTEGER),
                 'readable_filesize' => array('type' => self::TYPE_STRING, 'indexed' => false),
+                'metasets' => array('type' => self::TYPE_STRING, 'array' => true),
             )
         );
     }

@@ -18,6 +18,8 @@ use Phlexible\Bundle\IndexerMediaBundle\Event\MapDocumentEvent;
 use Phlexible\Bundle\IndexerMediaBundle\IndexerMediaEvents;
 use Phlexible\Component\Formatter\FilesizeFormatter;
 use Phlexible\Component\MediaExtractor\Extractor\ExtractorInterface;
+use Phlexible\Component\MediaManager\Meta\FileMetaDataManager;
+use Phlexible\Component\MediaManager\Meta\FileMetaSetResolver;
 use Phlexible\Component\MediaType\Model\MediaTypeManagerInterface;
 use Phlexible\Component\Volume\Model\FileInterface;
 use Phlexible\Component\Volume\Model\FolderInterface;
@@ -53,6 +55,16 @@ class MediaDocumentMapper
     private $mediaTypeManager;
 
     /**
+     * @var FileMetaSetResolver
+     */
+    private $metasetResolver;
+
+    /**
+     * @var FileMetaDataManager
+     */
+    private $metaDataManager;
+
+    /**
      * @var EventDispatcherInterface
      */
     private $dispatcher;
@@ -67,6 +79,8 @@ class MediaDocumentMapper
      * @param ExtractorInterface        $extractor
      * @param VolumeManager             $volumeManager
      * @param MediaTypeManagerInterface $mediaTypeManager
+     * @param FileMetaSetResolver       $metasetResolver
+     * @param FileMetaDataManager       $metaDataManager
      * @param EventDispatcherInterface  $dispatcher
      * @param string                    $defaultLanguage
      */
@@ -75,13 +89,17 @@ class MediaDocumentMapper
         ExtractorInterface $extractor,
         VolumeManager $volumeManager,
         MediaTypeManagerInterface $mediaTypeManager,
+        FileMetaSetResolver $metasetResolver,
+        FileMetaDataManager $metaDataManager,
         EventDispatcherInterface $dispatcher,
-        $defaultLanguage)
-    {
+        $defaultLanguage
+    ) {
         $this->documentFactory = $documentFactory;
         $this->extractor = $extractor;
         $this->volumeManager = $volumeManager;
         $this->mediaTypeManager = $mediaTypeManager;
+        $this->metasetResolver = $metasetResolver;
+        $this->metaDataManager = $metaDataManager;
         $this->dispatcher = $dispatcher;
         $this->defaultLanguage = $defaultLanguage;
     }
@@ -194,8 +212,6 @@ class MediaDocumentMapper
             $parentFolder = $volume->findFolder($parentFolder->getParentId());
         }
 
-        $tags = '';
-
         $document = $this->documentFactory->factory($this->getDocumentClass());
 
         $content = base64_encode(file_get_contents($file->getPhysicalPath()));
@@ -203,7 +219,6 @@ class MediaDocumentMapper
         $document
             ->setIdentity($id)
             ->set('title', $file->getName())
-            ->set('tags', $tags)
             ->set('folder_id', $file->getFolderID())
             ->set('parent_folder_ids', $parentFolderIds)
             ->set('file_id', $file->getID())
@@ -215,48 +230,34 @@ class MediaDocumentMapper
             ->set('media_type', $file->getMediaType())
             ->set('filesize', $file->getSize())
             ->set('readable_filesize', $readableFileSize)
-            //->setValue('content', $content)
-            //->setValue('mediafile', $content);
             ->set('mediafile', array(
                 '_content_type' => $file->getMimeType(),
                 '_name' => $file->getName(),
                 '_content' => $content,
             ));
 
-        // process meta data
-        // TODO: enable
-        /*
-        $metaLanguage = $this->getMetaLanguage($file);
-        $meta         = $asset->getMeta($metaLanguage);
+        $metasets = $this->metasetResolver->resolve($file);
+        $metasetNames = array();
+        $metaData = array();
+        foreach ($metasets as $metaset) {
+            $metasetNames[] = $metaset->getName();
+            $metadata = $this->metaDataManager->findByMetaSetAndFile($metaset, $file);
 
-        foreach ($meta as $metaKey => $metaField)
-        {
-            $metaFieldType  = $metaField['type'];
-
-            if ('suggest' === $metaFieldType)
-            {
-                $metaFieldValue = (array) $metaField['value'];
-            }
-            else
-            {
-                $metaFieldValue = $metaField['value'];
+            if (!$metadata) {
+                continue;
             }
 
-            $document->setValue('meta_' . $metaKey, $metaFieldValue, true);
+            $values = $metadata->getValues();
 
-
-            // overwrite title with title from meta information if available
-            if ($document->hasValue('meta_title'))
-            {
-                $metaTitle = $document->getValue('meta_title');
-
-                if (mb_strlen($metaTitle))
-                {
-                    $document->setValue('title', $metaTitle);
+            foreach ($values as $language => $languageValues) {
+                foreach ($languageValues as $languageKey => $languageValue) {
+                    $metaData[] = $languageValue;
                 }
             }
         }
-        */
+
+        $document->set('metasets', $metasetNames);
+        $document->set('tags', $metaData);
 
         $event = new MapDocumentEvent($document, $file);
         $this->dispatcher->dispatch(IndexerMediaEvents::MAP_DOCUMENT, $event);
