@@ -62,7 +62,7 @@ class MediaIndexer implements IndexerInterface
         MediaDocumentMapper $mapper,
         JobManagerInterface $jobManager,
         LoggerInterface $logger,
-        $batchSize = 50
+        $batchSize = 10
     ) {
         $this->storage = $storage;
         $this->mapper = $mapper;
@@ -190,22 +190,29 @@ class MediaIndexer implements IndexerInterface
     {
         $identities = $this->mapper->findIdentities();
 
-        $cnt = 0;
+        $handled = 0;
+        $batch = 0;
+        $total = count($identities);
 
         $operations = $this->storage->createOperations();
 
         foreach ($identities as $identity) {
-            $this->logger->info("indexAll $identity");
+            ++$handled;
+
+            $this->logger->info("indexAll add $identity");
 
             $document = $this->mapper->map($identity);
             if (!$document) {
+                $this->logger->warning("indexAll skipping $identity");
                 continue;
             }
             $operations->addDocument($document);
 
-            ++$cnt;
+            ++$batch;
 
-            if ($cnt % $this->batchSize === 0) {
+            if ($batch % $this->batchSize === 0) {
+                $this->logger->notice("indexAll batch commit ($handled/$total)");
+
                 $operations->commit();
 
                 $this->storage->execute($operations);
@@ -215,12 +222,13 @@ class MediaIndexer implements IndexerInterface
         }
 
         if (count($operations)) {
+            $this->logger->notice("indexAll commit ($handled/$total)");
             $operations->commit();
 
             $this->storage->execute($operations);
         }
 
-        return $cnt;
+        return $handled;
     }
 
     /**
@@ -230,18 +238,24 @@ class MediaIndexer implements IndexerInterface
     {
         $identities = $this->mapper->findIdentities();
 
-        $cnt = 0;
+        $handled = 0;
+        $batch = 0;
+        $total = count($identities);
 
         $operations = $this->storage->createOperations();
 
         foreach ($identities as $identity) {
-            $this->logger->info("indexAll $identity");
+            ++$handled;
+
+            $this->logger->info("queueAll add $identity");
 
             $operations->addIdentity($identity);
 
-            ++$cnt;
+            ++$batch;
 
-            if ($cnt % $this->batchSize === 0) {
+            if ($batch % $this->batchSize === 0) {
+                $this->logger->notice("queueAll batch commit ($handled/$total)");
+
                 $operations->commit();
 
                 $this->storage->queue($operations);
@@ -251,12 +265,14 @@ class MediaIndexer implements IndexerInterface
         }
 
         if (count($operations)) {
+            $this->logger->notice("queueAll commit ($handled/$total)");
+
             $operations->commit();
 
             $this->storage->queue($operations);
         }
 
-        return $cnt;
+        return $handled;
     }
 
     /**
