@@ -46,21 +46,29 @@ class MediaIndexer implements IndexerInterface
     private $logger;
 
     /**
+     * @var int
+     */
+    private $batchSize;
+
+    /**
      * @param StorageInterface    $storage
      * @param MediaDocumentMapper $mapper
      * @param JobManagerInterface $jobManager
      * @param LoggerInterface     $logger
+     * @param int                 $batchSize
      */
     public function __construct(
         StorageInterface $storage,
         MediaDocumentMapper $mapper,
         JobManagerInterface $jobManager,
-        LoggerInterface $logger)
-    {
+        LoggerInterface $logger,
+        $batchSize = 50
+    ) {
         $this->storage = $storage;
         $this->mapper = $mapper;
         $this->jobManager = $jobManager;
         $this->logger = $logger;
+        $this->batchSize = $batchSize;
     }
 
     /**
@@ -178,31 +186,73 @@ class MediaIndexer implements IndexerInterface
     /**
      * {@inheritdoc}
      */
-    public function indexAll($viaQueue = false)
+    public function indexAll()
     {
-        $documentIds = $this->mapper->findIdentities();
+        $identities = $this->mapper->findIdentities();
+
+        $cnt = 0;
 
         $operations = $this->storage->createOperations();
 
-        $cnt = 0;
-        foreach ($documentIds as $identifier) {
-            $document = $this->mapper->map($identifier);
+        foreach ($identities as $identity) {
+            $this->logger->info("indexAll $identity");
 
+            $document = $this->mapper->map($identity);
             if (!$document) {
-                $this->logger->error("Document $identifier could not be loaded.");
                 continue;
             }
-
             $operations->addDocument($document);
 
             ++$cnt;
+
+            if ($cnt % $this->batchSize === 0) {
+                $operations->commit();
+
+                $this->storage->execute($operations);
+
+                $operations = $this->storage->createOperations();
+            }
         }
 
-        $operations->commit();
+        if (count($operations)) {
+            $operations->commit();
 
-        if (!$viaQueue) {
             $this->storage->execute($operations);
-        } else {
+        }
+
+        return $cnt;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function queueAll()
+    {
+        $identities = $this->mapper->findIdentities();
+
+        $cnt = 0;
+
+        $operations = $this->storage->createOperations();
+
+        foreach ($identities as $identity) {
+            $this->logger->info("indexAll $identity");
+
+            $operations->addIdentity($identity);
+
+            ++$cnt;
+
+            if ($cnt % $this->batchSize === 0) {
+                $operations->commit();
+
+                $this->storage->queue($operations);
+
+                $operations = $this->storage->createOperations();
+            }
+        }
+
+        if (count($operations)) {
+            $operations->commit();
+
             $this->storage->queue($operations);
         }
 

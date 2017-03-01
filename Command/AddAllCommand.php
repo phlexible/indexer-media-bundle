@@ -40,8 +40,6 @@ class AddAllCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $queue = $input->getOption('queue');
-
         ini_set('memory_limit', -1);
 
         $indexer = $this->getContainer()->get('phlexible_indexer_media.media_indexer');
