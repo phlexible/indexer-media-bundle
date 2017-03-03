@@ -12,7 +12,7 @@
 namespace Phlexible\Bundle\IndexerMediaBundle\Event;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
-use Phlexible\Component\Volume\Model\FileInterface;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
@@ -28,18 +28,18 @@ class MapDocumentEvent extends Event
     private $document;
 
     /**
-     * @var FileInterface
+     * @var MediaDocumentDescriptor
      */
-    private $file;
+    private $descriptor;
 
     /**
-     * @param DocumentInterface $document
-     * @param FileInterface     $file
+     * @param DocumentInterface       $document
+     * @param MediaDocumentDescriptor $descriptor
      */
-    public function __construct(DocumentInterface $document, FileInterface $file)
+    public function __construct(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
     {
         $this->document = $document;
-        $this->file = $file;
+        $this->descriptor = $descriptor;
     }
 
     /**
@@ -51,10 +51,10 @@ class MapDocumentEvent extends Event
     }
 
     /**
-     * @return FileInterface
+     * @return MediaDocumentDescriptor
      */
-    public function getFile()
+    public function getDescriptor()
     {
-        return $this->file;
+        return $this->descriptor;
     }
 }

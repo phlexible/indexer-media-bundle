@@ -11,12 +11,9 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\EventListener;
 
+use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer;
-use Phlexible\Bundle\MediaManagerBundle\Event\SaveMetaEvent;
-use Phlexible\Component\Volume\Event\CreateFileEvent;
 use Phlexible\Component\Volume\Event\FileEvent;
-use Phlexible\Component\Volume\Event\MoveFileEvent;
-use Phlexible\Component\Volume\Event\ReplaceFileEvent;
 use Phlexible\Component\Volume\VolumeEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -51,38 +48,37 @@ class FileListener implements EventSubscriberInterface
             VolumeEvents::REPLACE_FILE => 'onReplaceFile',
             VolumeEvents::MOVE_FILE => 'onMoveFile',
             VolumeEvents::DELETE_FILE => 'onDeleteFile',
-            //VolumeEvents::DELETE_FILE => 'onSaveMeta',
         );
     }
 
     /**
-     * @param CreateFileEvent $event
+     * @param FileEvent $event
      */
-    public function onCreateFile(CreateFileEvent $event)
+    public function onCreateFile(FileEvent $event)
     {
         $file = $event->getFile();
 
-        $this->indexer->add("file_{$file->getId()}_{$file->getVersion()}", true);
+        $this->indexer->add(new DocumentIdentity("media_{$file->getId()}_{$file->getVersion()}"), true);
     }
 
     /**
-     * @param ReplaceFileEvent $event
+     * @param FileEvent $event
      */
-    public function onReplaceFile(ReplaceFileEvent $event)
+    public function onReplaceFile(FileEvent $event)
     {
         $file = $event->getFile();
 
-        $this->indexer->add("file_{$file->getId()}_{$file->getVersion()}", true);
+        $this->indexer->add(new DocumentIdentity("media_{$file->getId()}_{$file->getVersion()}"), true);
     }
 
     /**
-     * @param MoveFileEvent $event
+     * @param FileEvent $event
      */
-    public function onMoveFile(MoveFileEvent $event)
+    public function onMoveFile(FileEvent $event)
     {
         $file = $event->getFile();
 
-        $this->indexer->add("file_{$file->getId()}_{$file->getVersion()}", true);
+        $this->indexer->add(new DocumentIdentity("media_{$file->getId()}_{$file->getVersion()}"), true);
     }
 
     /**
@@ -92,13 +88,6 @@ class FileListener implements EventSubscriberInterface
     {
         $file = $event->getFile();
 
-        $this->indexer->delete("file_{$file->getId()}_{$file->getVersion()}", true);
-    }
-
-    public function onSaveMeta(SaveMetaEvent $event)
-    {
-        $file = $event->getFile();
-
-        $this->indexer->add("file_{$file->getId()}_{$file->getVersion()}", true);
+        $this->indexer->add(new DocumentIdentity("media_{$file->getId()}_{$file->getVersion()}"), true);
     }
 }

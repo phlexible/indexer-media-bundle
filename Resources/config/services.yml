@@ -19,8 +19,25 @@ services:
             - "@phlexible_media_type.media_type_manager"
             - "@phlexible_media_manager.file_meta_set_resolver"
             - "@phlexible_media_manager.file_meta_data_manager"
+            - "@phlexible_indexer_media.indexible_voter"
+            - "@phlexible_indexer_media.indexible_content_voter"
             - "@event_dispatcher"
             - "%phlexible_meta_set.languages.default%"
+
+    phlexible_indexer_media.file_exists_indexible_voter:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\FileExistsIndexibleVoter
+        tags:
+            - {name: phlexible_indexer_media.indexible_content_voter}
+
+    phlexible_indexer_media.indexible_voter:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\ChainIndexibleVoter
+        arguments:
+            - []
+
+    phlexible_indexer_media.indexible_content_voter:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\ChainIndexibleVoter
+        arguments:
+            - []
 
     # event listeners
     phlexible_indexer_media.listener.file:

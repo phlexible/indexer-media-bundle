@@ -172,7 +172,7 @@ class MediaIndexerTest extends TestCase
         $this->indexer->indexAll();
     }
 
-    public function testIndexAllWithQueue()
+    public function testQueueAll()
     {
         $this->mapper->findIdentities()->willReturn(array(new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440000_1'), new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440001_2')));
         $this->mapper->map('media_550e8400-e29b-11d4-a716-446655440000_1')->willReturn(new MediaDocument());
@@ -180,6 +180,6 @@ class MediaIndexerTest extends TestCase
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 
-        $this->indexer->indexAll(true);
+        $this->indexer->queueAll();
     }
 }

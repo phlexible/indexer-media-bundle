@@ -16,11 +16,13 @@ use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Phlexible\Bundle\IndexerMediaBundle\Event\MapDocumentEvent;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\IndexibleVoterInterface;
 use Phlexible\Bundle\IndexerMediaBundle\IndexerMediaEvents;
 use Phlexible\Component\Formatter\FilesizeFormatter;
 use Phlexible\Component\MediaExtractor\Extractor\ExtractorInterface;
 use Phlexible\Component\MediaManager\Meta\FileMetaDataManager;
 use Phlexible\Component\MediaManager\Meta\FileMetaSetResolver;
+use Phlexible\Component\MediaManager\Volume\ExtendedFileInterface;
 use Phlexible\Component\MediaType\Model\MediaTypeManagerInterface;
 use Phlexible\Component\Volume\Model\FileInterface;
 use Phlexible\Component\Volume\Model\FolderInterface;
@@ -66,6 +68,16 @@ class MediaDocumentMapper
     private $metaDataManager;
 
     /**
+     * @var IndexibleVoterInterface
+     */
+    private $indexibleVoter;
+
+    /**
+     * @var IndexibleVoterInterface
+     */
+    private $indexibleContentVoter;
+
+    /**
      * @var EventDispatcherInterface
      */
     private $dispatcher;
@@ -82,6 +94,8 @@ class MediaDocumentMapper
      * @param MediaTypeManagerInterface $mediaTypeManager
      * @param FileMetaSetResolver       $metasetResolver
      * @param FileMetaDataManager       $metaDataManager
+     * @param IndexibleVoterInterface   $indexibleVoter
+     * @param IndexibleVoterInterface   $indexibleContentVoter
      * @param EventDispatcherInterface  $dispatcher
      * @param string                    $defaultLanguage
      */
@@ -92,6 +106,8 @@ class MediaDocumentMapper
         MediaTypeManagerInterface $mediaTypeManager,
         FileMetaSetResolver $metasetResolver,
         FileMetaDataManager $metaDataManager,
+        IndexibleVoterInterface $indexibleVoter,
+        IndexibleVoterInterface $indexibleContentVoter,
         EventDispatcherInterface $dispatcher,
         $defaultLanguage
     ) {
@@ -101,6 +117,8 @@ class MediaDocumentMapper
         $this->mediaTypeManager = $mediaTypeManager;
         $this->metasetResolver = $metasetResolver;
         $this->metaDataManager = $metaDataManager;
+        $this->indexibleVoter = $indexibleVoter;
+        $this->indexibleContentVoter = $indexibleContentVoter;
         $this->dispatcher = $dispatcher;
         $this->defaultLanguage = $defaultLanguage;
     }
@@ -167,11 +185,13 @@ class MediaDocumentMapper
         $file = $volume->findFile($fileId, $fileVersion);
         $folder = $volume->findFolder($file->getFolderId());
 
-        if (!file_exists($file->getPhysicalPath())) {
+        $descriptor = new MediaDocumentDescriptor($identity, $volume, $file, $folder);
+
+        if (IndexibleVoterInterface::VOTE_DENY === $this->indexibleVoter->isIndexible($descriptor)) {
             return null;
         }
 
-        $document = $this->mapFileToDocument($file, $folder, $volume, $identity);
+        $document = $this->mapFileToDocument($descriptor);
 
         return $document;
     }
@@ -179,19 +199,11 @@ class MediaDocumentMapper
     /**
      * Create document and fill it with values.
      *
-     * @param FileInterface    $file
-     * @param FolderInterface  $folder
-     * @param VolumeInterface  $volume
-     * @param DocumentIdentity $identity
+     * @param MediaDocumentDescriptor $descriptor
      *
      * @return DocumentInterface
      */
-    private function mapFileToDocument(
-        FileInterface $file,
-        FolderInterface $folder,
-        VolumeInterface $volume,
-        DocumentIdentity $identity
-    ) {
+    private function mapFileToDocument(MediaDocumentDescriptor $descriptor) {
         // TODO do we need boosting?
 
         // extract content
@@ -199,54 +211,58 @@ class MediaDocumentMapper
 
         // Field: readablefilesize
         $formatter = new FilesizeFormatter();
-        $readableFileSize = $formatter->formatFilesize($file->getSize());
+        $readableFileSize = $formatter->formatFilesize($descriptor->getFile()->getSize());
 
         // Field: url
-        $url = '/download/'.$file->getId().'/'.$file->getName();
+        $url = '/download/'.$descriptor->getFile()->getId().'/'.$descriptor->getFile()->getName();
 
         // Field: Parent Folder IDs
 
         $parentFolderIds = array();
-        $parentFolder = $folder;
+        $parentFolder = $descriptor->getFolder();
 
         while ($parentFolder) {
             $parentFolderIds[] = $parentFolder->getId();
             if (!$parentFolder->getParentId()) {
                 break;
             }
-            $parentFolder = $volume->findFolder($parentFolder->getParentId());
+            $parentFolder = $descriptor->getVolume()->findFolder($parentFolder->getParentId());
         }
 
         $document = $this->documentFactory->factory($this->getDocumentClass());
 
-        $content = base64_encode(file_get_contents($file->getPhysicalPath()));
-
         $document
-            ->setIdentity($identity)
-            ->set('title', $file->getName())
-            ->set('folder_id', $file->getFolderID())
+            ->setIdentity($descriptor->getIdentity())
+            ->set('title', $descriptor->getFile()->getName())
+            ->set('folder_id', $descriptor->getFile()->getFolderID())
             ->set('parent_folder_ids', $parentFolderIds)
-            ->set('file_id', $file->getID())
-            ->set('file_version', $file->getVersion())
-            ->set('filename', $file->getName())
+            ->set('file_id', $descriptor->getFile()->getID())
+            ->set('file_version', $descriptor->getFile()->getVersion())
+            ->set('filename', $descriptor->getFile()->getName())
             ->set('url', $url)
-            ->set('mime_type', $file->getMimeType())
-            ->set('media_category', $file->getMediaCategory())
-            ->set('media_type', $file->getMediaType())
-            ->set('filesize', $file->getSize())
-            ->set('readable_filesize', $readableFileSize)
-            ->set('mediafile', array(
-                '_content_type' => $file->getMimeType(),
-                '_name' => $file->getName(),
-                '_content' => $content,
-            ));
+            ->set('mime_type', $descriptor->getFile()->getMimeType())
+            ->set('media_category', $descriptor->getFile()->getMediaCategory())
+            ->set('media_type', $descriptor->getFile()->getMediaType())
+            ->set('filesize', $descriptor->getFile()->getSize())
+            ->set('readable_filesize', $readableFileSize);
 
-        $metasets = $this->metasetResolver->resolve($file);
+        if (IndexibleVoterInterface::VOTE_ALLOW === $this->indexibleContentVoter->isIndexible($descriptor)) {
+            $content = base64_encode(file_get_contents($descriptor->getFile()->getPhysicalPath()));
+
+            $document
+                ->set('mediafile', array(
+                    '_content_type' => $descriptor->getFile()->getMimeType(),
+                    '_name' => $descriptor->getFile()->getName(),
+                    '_content' => $content,
+                ));
+        }
+
+        $metasets = $this->metasetResolver->resolve($descriptor->getFile());
         $metasetNames = array();
         $metaData = array();
         foreach ($metasets as $metaset) {
             $metasetNames[] = $metaset->getName();
-            $metadata = $this->metaDataManager->findByMetaSetAndFile($metaset, $file);
+            $metadata = $this->metaDataManager->findByMetaSetAndFile($metaset, $descriptor->getFile());
 
             if (!$metadata) {
                 continue;
@@ -264,7 +280,7 @@ class MediaDocumentMapper
         $document->set('metasets', $metasetNames);
         $document->set('tags', $metaData);
 
-        $event = new MapDocumentEvent($document, $file);
+        $event = new MapDocumentEvent($document, $descriptor);
         $this->dispatcher->dispatch(IndexerMediaEvents::MAP_DOCUMENT, $event);
 
         return $document;
