@@ -52,14 +52,8 @@ class BaseDocumentApplier implements DocumentApplierInterface
      */
     public function apply(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
     {
-        // Field: readablefilesize
         $formatter = new FilesizeFormatter();
         $readableFileSize = $formatter->formatFilesize($descriptor->getFile()->getSize());
-
-        // Field: url
-        $url = '/download/'.$descriptor->getFile()->getId().'/'.$descriptor->getFile()->getName();
-
-        // Field: Parent Folder IDs
 
         $parentFolderIds = array();
         $parentFolder = $descriptor->getFolder();
@@ -80,7 +74,6 @@ class BaseDocumentApplier implements DocumentApplierInterface
             ->set('file_id', $descriptor->getFile()->getId())
             ->set('file_version', $descriptor->getFile()->getVersion())
             ->set('filename', $descriptor->getFile()->getName())
-            ->set('url', $url)
             ->set('mime_type', $descriptor->getFile()->getMimeType())
             ->set('media_category', $descriptor->getFile()->getMediaCategory())
             ->set('media_type', $descriptor->getFile()->getMediaType())
