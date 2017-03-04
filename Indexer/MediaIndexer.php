@@ -11,10 +11,12 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
+use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
 use Phlexible\Bundle\IndexerBundle\Indexer\IndexerInterface;
 use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
+use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -26,6 +28,11 @@ use Psr\Log\LoggerInterface;
 class MediaIndexer implements IndexerInterface
 {
     /**
+     * @var DocumentFactory
+     */
+    private $documentFactory;
+
+    /**
      * @var StorageInterface
      */
     private $storage;
@@ -34,6 +41,11 @@ class MediaIndexer implements IndexerInterface
      * @var MediaDocumentMapper
      */
     private $mapper;
+
+    /**
+     * @var MediaContentIdentifierInterface
+     */
+    private $identifier;
 
     /**
      * @var JobManagerInterface
@@ -46,37 +58,43 @@ class MediaIndexer implements IndexerInterface
     private $logger;
 
     /**
+     * @var string
+     */
+    private $documentClass;
+
+    /**
      * @var int
      */
     private $batchSize;
 
     /**
-     * @param StorageInterface    $storage
-     * @param MediaDocumentMapper $mapper
-     * @param JobManagerInterface $jobManager
-     * @param LoggerInterface     $logger
-     * @param int                 $batchSize
+     * @param DocumentFactory                 $documentFactory
+     * @param StorageInterface                $storage
+     * @param MediaDocumentMapper             $mapper
+     * @param MediaContentIdentifierInterface $identifier
+     * @param JobManagerInterface             $jobManager
+     * @param LoggerInterface                 $logger
+     * @param string                          $documentClass
+     * @param int                             $batchSize
      */
     public function __construct(
+        DocumentFactory $documentFactory,
         StorageInterface $storage,
         MediaDocumentMapper $mapper,
+        MediaContentIdentifierInterface $identifier,
         JobManagerInterface $jobManager,
         LoggerInterface $logger,
+        $documentClass = MediaDocument::class,
         $batchSize = 10
     ) {
+        $this->documentFactory = $documentFactory;
         $this->storage = $storage;
         $this->mapper = $mapper;
+        $this->identifier = $identifier;
         $this->jobManager = $jobManager;
         $this->logger = $logger;
+        $this->documentClass = $documentClass;
         $this->batchSize = $batchSize;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getName()
-    {
-        return 'Media indexer';
     }
 
     /**
@@ -98,17 +116,84 @@ class MediaIndexer implements IndexerInterface
     /**
      * {@inheritdoc}
      */
-    public function getDocumentClass()
+    public function supports(DocumentIdentity $identity)
     {
-        return $this->mapper->getDocumentClass();
+        return $this->identifier->validateIdentity($identity);
     }
 
     /**
-     * {@inheritdoc}
+     * @param string           $method
+     * @param DocumentIdentity $identity
      */
-    public function supports(DocumentIdentity $identity)
+    private function queueIdentityOperation($method, DocumentIdentity $identity)
     {
-        return (bool) preg_match('/^media_[0-9a-fA-F-]{36}_\d+$/', (string) $identity);
+        $method .= 'Identity';
+
+        $operations = $this->storage->createOperations()
+            ->$method($identity)
+            ->commit();
+
+        $this->storage->queue($operations);
+    }
+
+    /**
+     * @param string                  $method
+     * @param MediaDocumentDescriptor $descriptor
+     */
+    private function queueDescriptorOperation($method, MediaDocumentDescriptor $descriptor)
+    {
+        $method .= 'Identity';
+
+        $operations = $this->storage->createOperations()
+            ->$method($descriptor->getIdentity())
+            ->commit();
+
+        $this->storage->queue($operations);
+    }
+
+    /**
+     * @param string           $method
+     * @param DocumentIdentity $identity
+     */
+    private function executeIdentityOperation($method, DocumentIdentity $identity)
+    {
+        $descriptor = $this->identifier->createDescriptorFromIdentity($identity);
+        if (!$descriptor) {
+            return;
+        }
+
+        $document = $this->createDocument();
+        if (!$this->mapper->map($document, $descriptor)) {
+            return;
+        }
+
+        $method .= 'Document';
+
+        $operations = $this->storage->createOperations()
+            ->$method($document)
+            ->commit();
+
+        $this->storage->execute($operations);
+    }
+
+    /**
+     * @param string                  $method
+     * @param MediaDocumentDescriptor $descriptor
+     */
+    private function executeDescriptorOperation($method, MediaDocumentDescriptor $descriptor)
+    {
+        $document = $this->createDocument();
+        if (!$this->mapper->map($document, $descriptor)) {
+            return;
+        }
+
+        $method .= 'Document';
+
+        $operations = $this->storage->createOperations()
+            ->$method($document)
+            ->commit();
+
+        $this->storage->execute($operations);
     }
 
     /**
@@ -116,23 +201,15 @@ class MediaIndexer implements IndexerInterface
      */
     public function add(DocumentIdentity $identity, $viaQueue = false)
     {
-        $document = $this->mapper->map($identity);
+        $this->logger->debug("add {$identity}");
 
-        if (!$document) {
-            return false;
-        }
-
-        $operations = $this->storage->createOperations()
-            ->addDocument($document)
-            ->commit();
-
-        if (!$viaQueue) {
-            $this->storage->execute($operations);
+        if ($viaQueue) {
+            $this->queueIdentityOperation('add', $identity);
         } else {
-            $this->storage->queue($operations);
+            $this->executeIdentityOperation('add', $identity);
         }
 
-        return true;
+        return 1;
     }
 
     /**
@@ -140,23 +217,15 @@ class MediaIndexer implements IndexerInterface
      */
     public function update(DocumentIdentity $identity, $viaQueue = false)
     {
-        $document = $this->mapper->map($identity);
+        $this->logger->debug("update {$identity}");
 
-        if (!$document) {
-            return false;
-        }
-
-        $operations = $this->storage->createOperations()
-            ->updateDocument($document)
-            ->commit();
-
-        if (!$viaQueue) {
-            $this->storage->execute($operations);
+        if ($viaQueue) {
+            $this->queueIdentityOperation('update', $identity);
         } else {
-            $this->storage->queue($operations);
+            $this->executeIdentityOperation('update', $identity);
         }
 
-        return true;
+        return 1;
     }
 
     /**
@@ -164,23 +233,13 @@ class MediaIndexer implements IndexerInterface
      */
     public function delete(DocumentIdentity $identity, $viaQueue = false)
     {
-        $document = $this->mapper->map($identity);
-
-        if (!$document) {
-            return false;
-        }
-
-        $operations = $this->storage->createOperations()
-            ->deleteDocument($document)
-            ->commit();
-
-        if (!$viaQueue) {
-            $this->storage->execute($operations);
+        if ($viaQueue) {
+            $this->queueIdentityOperation('delete', $identity);
         } else {
-            $this->storage->queue($operations);
+            $this->executeIdentityOperation('delete', $identity);
         }
 
-        return true;
+        return 1;
     }
 
     /**
@@ -188,22 +247,21 @@ class MediaIndexer implements IndexerInterface
      */
     public function indexAll()
     {
-        $identities = $this->mapper->findIdentities();
+        $descriptors = $this->identifier->findAllDescriptors();
 
         $handled = 0;
         $batch = 0;
-        $total = count($identities);
 
         $operations = $this->storage->createOperations();
 
-        foreach ($identities as $identity) {
+        foreach ($descriptors as $descriptor) {
             ++$handled;
 
-            $this->logger->info("indexAll add $identity");
+            $this->logger->info("indexAll add {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
 
-            $document = $this->mapper->map($identity);
-            if (!$document) {
-                $this->logger->warning("indexAll skipping $identity");
+            $document = $this->createDocument();
+            if (!$this->mapper->map($document, $descriptor)) {
+                $this->logger->warning("indexAll skipping {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
                 continue;
             }
             $operations->addDocument($document);
@@ -211,7 +269,7 @@ class MediaIndexer implements IndexerInterface
             ++$batch;
 
             if ($batch % $this->batchSize === 0) {
-                $this->logger->notice("indexAll batch commit ($handled/$total)");
+                $this->logger->notice("indexAll batch commit ($handled)");
 
                 $operations->commit();
 
@@ -222,7 +280,7 @@ class MediaIndexer implements IndexerInterface
         }
 
         if (count($operations)) {
-            $this->logger->notice("indexAll commit ($handled/$total)");
+            $this->logger->notice("indexAll commit ($handled)");
             $operations->commit();
 
             $this->storage->execute($operations);
@@ -236,20 +294,20 @@ class MediaIndexer implements IndexerInterface
      */
     public function queueAll()
     {
-        $identities = $this->mapper->findIdentities();
+        $descriptors = $this->identifier->findAllDescriptors();
 
         $handled = 0;
         $batch = 0;
-        $total = count($identities);
+        $total = count($descriptors);
 
         $operations = $this->storage->createOperations();
 
-        foreach ($identities as $identity) {
+        foreach ($descriptors as $descriptor) {
             ++$handled;
 
-            $this->logger->info("queueAll add $identity");
+            $this->logger->info("queueAll add {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
 
-            $operations->addIdentity($identity);
+            $operations->addIdentity($descriptor->getIdentity());
 
             ++$batch;
 
@@ -280,8 +338,6 @@ class MediaIndexer implements IndexerInterface
      */
     public function createDocument()
     {
-        $class = $this->mapper->getDocumentClass();
-
-        return new $class();
+        return $this->documentFactory->factory($this->documentClass);
     }
 }

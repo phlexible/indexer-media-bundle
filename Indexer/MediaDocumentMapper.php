@@ -11,10 +11,7 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
-use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
-use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
-use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Phlexible\Bundle\IndexerMediaBundle\Event\MapDocumentEvent;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\IndexibleVoterInterface;
 use Phlexible\Bundle\IndexerMediaBundle\IndexerMediaEvents;
@@ -24,9 +21,6 @@ use Phlexible\Component\MediaManager\Meta\FileMetaDataManager;
 use Phlexible\Component\MediaManager\Meta\FileMetaSetResolver;
 use Phlexible\Component\MediaType\Model\MediaTypeManagerInterface;
 use Phlexible\Component\Volume\Model\FileInterface;
-use Phlexible\Component\Volume\Model\FolderInterface;
-use Phlexible\Component\Volume\VolumeInterface;
-use Phlexible\Component\Volume\VolumeManager;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -37,19 +31,9 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 class MediaDocumentMapper
 {
     /**
-     * @var DocumentFactory
-     */
-    private $documentFactory;
-
-    /**
      * @var ExtractorInterface
      */
     private $extractor;
-
-    /**
-     * @var VolumeManager
-     */
-    private $volumeManager;
 
     /**
      * @var MediaTypeManagerInterface
@@ -69,11 +53,6 @@ class MediaDocumentMapper
     /**
      * @var IndexibleVoterInterface
      */
-    private $indexibleVoter;
-
-    /**
-     * @var IndexibleVoterInterface
-     */
     private $indexibleContentVoter;
 
     /**
@@ -87,36 +66,27 @@ class MediaDocumentMapper
     private $defaultLanguage;
 
     /**
-     * @param DocumentFactory           $documentFactory
      * @param ExtractorInterface        $extractor
-     * @param VolumeManager             $volumeManager
      * @param MediaTypeManagerInterface $mediaTypeManager
      * @param FileMetaSetResolver       $metasetResolver
      * @param FileMetaDataManager       $metaDataManager
-     * @param IndexibleVoterInterface   $indexibleVoter
      * @param IndexibleVoterInterface   $indexibleContentVoter
      * @param EventDispatcherInterface  $dispatcher
      * @param string                    $defaultLanguage
      */
     public function __construct(
-        DocumentFactory $documentFactory,
         ExtractorInterface $extractor,
-        VolumeManager $volumeManager,
         MediaTypeManagerInterface $mediaTypeManager,
         FileMetaSetResolver $metasetResolver,
         FileMetaDataManager $metaDataManager,
-        IndexibleVoterInterface $indexibleVoter,
         IndexibleVoterInterface $indexibleContentVoter,
         EventDispatcherInterface $dispatcher,
         $defaultLanguage
     ) {
-        $this->documentFactory = $documentFactory;
         $this->extractor = $extractor;
-        $this->volumeManager = $volumeManager;
         $this->mediaTypeManager = $mediaTypeManager;
         $this->metasetResolver = $metasetResolver;
         $this->metaDataManager = $metaDataManager;
-        $this->indexibleVoter = $indexibleVoter;
         $this->indexibleContentVoter = $indexibleContentVoter;
         $this->dispatcher = $dispatcher;
         $this->defaultLanguage = $defaultLanguage;
@@ -125,84 +95,21 @@ class MediaDocumentMapper
     /**
      * {@inheritdoc}
      */
-    public function getDocumentFactory()
+    public function map(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
     {
-        return $this->documentFactory;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getDocumentClass()
-    {
-        return MediaDocument::class;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function findIdentities()
-    {
-        $indexIdentities = array();
-
-        foreach ($this->volumeManager->all() as $volume) {
-            /* @var $volume VolumeInterface */
-
-            $rii = new \RecursiveIteratorIterator($volume->getIterator(), \RecursiveIteratorIterator::SELF_FIRST);
-
-            foreach ($rii as $folder) {
-                /* @var $folder FolderInterface */
-
-                $files = $volume->findFilesByFolder($folder);
-
-                foreach ($files as $file) {
-                    /* @var $file FileInterface */
-
-                    $fileId = $file->getId();
-                    $fileVersion = $file->getVersion();
-
-                    $identifier = sprintf('%s_%s_%s', 'media', $fileId, $fileVersion);
-
-                    $indexIdentities[] = new DocumentIdentity($identifier);
-                }
-            }
-        }
-
-        return $indexIdentities;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function map(DocumentIdentity $identity)
-    {
-        // extract identifier parts from id
-        list($prefix, $fileId, $fileVersion) = explode('_', $identity);
-
-        // get file object
-        $volume = $this->volumeManager->getByFileId($fileId);
-        $file = $volume->findFile($fileId, $fileVersion);
-        $folder = $volume->findFolder($file->getFolderId());
-
-        $descriptor = new MediaDocumentDescriptor($identity, $volume, $file, $folder);
-
-        if (IndexibleVoterInterface::VOTE_DENY === $this->indexibleVoter->isIndexible($descriptor)) {
-            return null;
-        }
-
-        $document = $this->mapFileToDocument($descriptor);
+        $document = $this->applyDescriptor($document, $descriptor);
 
         return $document;
     }
 
     /**
-     * Create document and fill it with values.
-     *
+     * @param DocumentInterface       $document
      * @param MediaDocumentDescriptor $descriptor
      *
      * @return DocumentInterface
      */
-    private function mapFileToDocument(MediaDocumentDescriptor $descriptor) {
+    private function applyDescriptor(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
+    {
         // TODO do we need boosting?
 
         // extract content
@@ -227,8 +134,6 @@ class MediaDocumentMapper
             }
             $parentFolder = $descriptor->getVolume()->findFolder($parentFolder->getParentId());
         }
-
-        $document = $this->documentFactory->factory($this->getDocumentClass());
 
         $document
             ->setIdentity($descriptor->getIdentity())

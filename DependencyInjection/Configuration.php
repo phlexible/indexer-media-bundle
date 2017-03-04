@@ -11,6 +11,7 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\DependencyInjection;
 
+use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -33,6 +34,7 @@ class Configuration implements ConfigurationInterface
             ->addDefaultsIfNotSet()
             ->children()
                 ->scalarNode('storage')->defaultValue('phlexible_indexer.storage.default')->end()
+                ->scalarNode('document_class')->defaultValue(MediaDocument::class)->end()
                 ->integerNode('batch_size')->defaultValue(10)->end()
             ->end();
 
