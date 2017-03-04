@@ -1,0 +1,15 @@
+services:
+    phlexible_indexer_media.file_exists_indexible_voter:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\FileExistsIndexibleVoter
+        tags:
+            - {name: phlexible_indexer_media.indexible_content_voter}
+
+    phlexible_indexer_media.indexible_voter:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\ChainIndexibleVoter
+        arguments:
+            - []
+
+    phlexible_indexer_media.indexible_content_voter:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\ChainIndexibleVoter
+        arguments:
+            - []

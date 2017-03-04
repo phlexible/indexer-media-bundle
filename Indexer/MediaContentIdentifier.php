@@ -12,7 +12,6 @@
 namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
-use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\IndexibleVoterInterface;
 use Phlexible\Component\Volume\Model\FileInterface;
 use Phlexible\Component\Volume\Model\FolderInterface;
 use Phlexible\Component\Volume\VolumeInterface;
@@ -31,20 +30,11 @@ class MediaContentIdentifier implements MediaContentIdentifierInterface
     private $volumeManager;
 
     /**
-     * @var IndexibleVoterInterface
+     * @param VolumeManager $volumeManager
      */
-    private $indexibleVoter;
-
-    /**
-     * @param VolumeManager           $volumeManager
-     * @param IndexibleVoterInterface $indexibleVoter
-     */
-    public function __construct(
-        VolumeManager $volumeManager,
-        IndexibleVoterInterface $indexibleVoter
-    ) {
+    public function __construct(VolumeManager $volumeManager)
+    {
         $this->volumeManager = $volumeManager;
-        $this->indexibleVoter = $indexibleVoter;
     }
 
     /**
@@ -130,10 +120,6 @@ class MediaContentIdentifier implements MediaContentIdentifierInterface
                         $file,
                         $folder
                     );
-
-                    if ($this->indexibleVoter->isIndexible($descriptor) === IndexibleVoterInterface::VOTE_DENY) {
-                        continue;
-                    }
 
                     yield $descriptor;
                 }
