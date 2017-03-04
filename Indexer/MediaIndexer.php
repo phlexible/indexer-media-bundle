@@ -163,7 +163,7 @@ class MediaIndexer implements IndexerInterface
         }
 
         $document = $this->createDocument();
-        if (!$this->mapper->map($document, $descriptor)) {
+        if (!$this->mapper->mapDocument($document, $descriptor)) {
             return;
         }
 
@@ -183,7 +183,7 @@ class MediaIndexer implements IndexerInterface
     private function executeDescriptorOperation($method, MediaDocumentDescriptor $descriptor)
     {
         $document = $this->createDocument();
-        if (!$this->mapper->map($document, $descriptor)) {
+        if (!$this->mapper->mapDocument($document, $descriptor)) {
             return;
         }
 
@@ -260,7 +260,7 @@ class MediaIndexer implements IndexerInterface
             $this->logger->info("indexAll add {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
 
             $document = $this->createDocument();
-            if (!$this->mapper->map($document, $descriptor)) {
+            if (!$this->mapper->mapDocument($document, $descriptor)) {
                 $this->logger->warning("indexAll skipping {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
                 continue;
             }

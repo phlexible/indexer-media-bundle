@@ -11,13 +11,19 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Tests\Indexer;
 
+use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerBundle\Storage\Operation\Operations;
 use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaContentIdentifierInterface;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentMapper;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer;
+use Phlexible\Bundle\MediaManagerBundle\Entity\File;
+use Phlexible\Bundle\MediaManagerBundle\Entity\Folder;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
+use Phlexible\Component\Volume\Volume;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -30,6 +36,16 @@ use Psr\Log\LoggerInterface;
  */
 class MediaIndexerTest extends TestCase
 {
+    /**
+     * @var MediaDocument
+     */
+    private $document;
+
+    /**
+     * @var DocumentFactory
+     */
+    private $documentFactory;
+
     /**
      * @var MediaIndexer
      */
@@ -46,6 +62,11 @@ class MediaIndexerTest extends TestCase
     private $mapper;
 
     /**
+     * @var MediaContentIdentifierInterface|ObjectProphecy
+     */
+    private $identifier;
+
+    /**
      * @var JobManagerInterface|ObjectProphecy
      */
     private $jobManager;
@@ -57,17 +78,24 @@ class MediaIndexerTest extends TestCase
 
     public function setUp()
     {
+        $this->document = new MediaDocument();
+        $this->document->setIdentity(new DocumentIdentity('A'));
+
+        $this->documentFactory = $this->prophesize(DocumentFactory::class);
+        $this->documentFactory->factory(MediaDocument::class)->willReturn($this->document);
         $this->storage = $this->prophesize(StorageInterface::class);
         $this->mapper = $this->prophesize(MediaDocumentMapper::class);
+        $this->identifier = $this->prophesize(MediaContentIdentifierInterface::class);
         $this->jobManager = $this->prophesize(JobManagerInterface::class);
         $this->logger = $this->prophesize(LoggerInterface::class);
 
         $this->storage->createOperations()->willReturn(new Operations());
-        $this->mapper->map('testIdentifier')->willReturn(new MediaDocument());
 
         $this->indexer = new MediaIndexer(
+            $this->documentFactory->reveal(),
             $this->storage->reveal(),
             $this->mapper->reveal(),
+            $this->identifier->reveal(),
             $this->jobManager->reveal(),
             $this->logger->reveal()
         );
@@ -75,97 +103,132 @@ class MediaIndexerTest extends TestCase
 
     public function testSupportedIdentifier()
     {
-        $this->assertTrue($this->indexer->supports(new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440000_1')));
+        $identity = new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440000_1');
+
+        $this->identifier->validateIdentity($identity)->willReturn(true);
+
+        $this->assertTrue($this->indexer->supports($identity));
     }
 
     public function testUnsupportedIdentifier()
     {
-        $this->assertFalse($this->indexer->supports(new DocumentIdentity('test')));
+        $identity = new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440000_1');
+
+        $this->identifier->validateIdentity($identity)->willReturn(false);
+
+        $this->assertFalse($this->indexer->supports($identity));
     }
 
     public function testAdd()
     {
+        $identity = new DocumentIdentity('media_74_1');
+        $descriptor = new MediaDocumentDescriptor($identity, $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+
+        $this->identifier->createDescriptorFromIdentity($identity)->willReturn($descriptor);
+        $this->mapper->mapDocument($this->document, $descriptor)->shouldBeCalled()->willReturn(true);
+
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
-        $this->indexer->add(new DocumentIdentity('testIdentifier'));
+        $this->indexer->add($identity);
     }
 
     public function testAddWithQueue()
     {
+        $identity = new DocumentIdentity('media_74_1');
+
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 
-        $this->indexer->add(new DocumentIdentity('testIdentifier'), true);
+        $this->indexer->add($identity, true);
     }
 
     public function testAddWithoutDocument()
     {
-        $this->mapper->map('testIdentifier')->willReturn(null);
-        $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
-        $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
+        $identity = new DocumentIdentity('media_74_1');
 
-        $this->indexer->add(new DocumentIdentity('testIdentifier'));
-        $this->indexer->add(new DocumentIdentity('testIdentifier'), true);
+        $this->identifier->createDescriptorFromIdentity($identity)->willReturn(null);
+        $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
+
+        $this->indexer->add($identity);
     }
 
     public function testUpdate()
     {
+        $identity = new DocumentIdentity('media_74_1');
+        $descriptor = new MediaDocumentDescriptor($identity, $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+
+        $this->identifier->createDescriptorFromIdentity($identity)->willReturn($descriptor);
+        $this->mapper->mapDocument($this->document, $descriptor)->shouldBeCalled()->willReturn(true);
+
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
-        $this->indexer->update(new DocumentIdentity('testIdentifier'));
+        $this->indexer->update($identity);
     }
 
     public function testUpdateWithQueue()
     {
+        $identity = new DocumentIdentity('media_74_1');
+
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 
-        $this->indexer->update(new DocumentIdentity('testIdentifier'), true);
+        $this->indexer->update($identity, true);
     }
 
     public function testUpdateWithoutDocument()
     {
-        $this->mapper->map('testIdentifier')->willReturn(null);
-        $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
-        $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
+        $identity = new DocumentIdentity('media_74_1');
 
-        $this->indexer->update(new DocumentIdentity('testIdentifier'));
-        $this->indexer->update(new DocumentIdentity('testIdentifier'), true);
+        $this->identifier->createDescriptorFromIdentity($identity)->willReturn(null);
+        $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
+
+        $this->indexer->update($identity);
     }
 
     public function testDelete()
     {
+        $identity = new DocumentIdentity('media_74_1');
+        $descriptor = new MediaDocumentDescriptor($identity, $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+
+        $this->identifier->createDescriptorFromIdentity($identity)->willReturn($descriptor);
+        $this->mapper->mapDocument($this->document, $descriptor)->shouldBeCalled()->willReturn(true);
+
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
-        $this->indexer->delete(new DocumentIdentity('testIdentifier'));
+        $this->indexer->delete($identity);
     }
 
     public function testDeleteWithQueue()
     {
+        $identity = new DocumentIdentity('media_74_1');
+
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 
-        $this->indexer->delete(new DocumentIdentity('testIdentifier'), true);
+        $this->indexer->delete($identity, true);
     }
 
     public function testDeleteWithoutDocument()
     {
-        $this->mapper->map('testIdentifier')->willReturn(null);
-        $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
-        $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
+        $identity = new DocumentIdentity('media_74_1');
 
-        $this->indexer->delete(new DocumentIdentity('testIdentifier'));
-        $this->indexer->delete(new DocumentIdentity('testIdentifier'), true);
+        $this->identifier->createDescriptorFromIdentity($identity)->willReturn(null);
+        $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
+
+        $this->indexer->delete($identity);
     }
 
     public function testIndexAll()
     {
-        $this->mapper->findIdentities()->willReturn(array(new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440000_1'), new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440001_2')));
-        $this->mapper->map('media_550e8400-e29b-11d4-a716-446655440000_1')->willReturn(new MediaDocument());
-        $this->mapper->map('media_550e8400-e29b-11d4-a716-446655440001_2')->willReturn(new MediaDocument());
+        $descriptor1 = new MediaDocumentDescriptor(new DocumentIdentity('media_74_1'), $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+        $descriptor2 = new MediaDocumentDescriptor(new DocumentIdentity('media_75_2'), $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+        $this->identifier->findAllDescriptors()->willReturn(array($descriptor1, $descriptor2));
+        $this->mapper->mapDocument(Argument::type(MediaDocument::class), $descriptor1)->shouldBeCalled()->willReturn(true);
+        $this->mapper->mapDocument(Argument::type(MediaDocument::class), $descriptor2)->shouldBeCalled()->willReturn(true);
+
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
 
@@ -174,9 +237,10 @@ class MediaIndexerTest extends TestCase
 
     public function testQueueAll()
     {
-        $this->mapper->findIdentities()->willReturn(array(new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440000_1'), new DocumentIdentity('media_550e8400-e29b-11d4-a716-446655440001_2')));
-        $this->mapper->map('media_550e8400-e29b-11d4-a716-446655440000_1')->willReturn(new MediaDocument());
-        $this->mapper->map('media_550e8400-e29b-11d4-a716-446655440001_2')->willReturn(new MediaDocument());
+        $descriptor1 = new MediaDocumentDescriptor(new DocumentIdentity('media_74_1'), $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+        $descriptor2 = new MediaDocumentDescriptor(new DocumentIdentity('media_75_2'), $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+        $this->identifier->findAllDescriptors()->willReturn(array($descriptor1, $descriptor2));
+        $this->mapper->mapDocument(Argument::cetera())->shouldNotBeCalled();
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 

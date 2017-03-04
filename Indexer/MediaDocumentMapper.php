@@ -95,7 +95,7 @@ class MediaDocumentMapper
     /**
      * {@inheritdoc}
      */
-    public function map(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
+    public function mapDocument(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
     {
         $document = $this->applyDescriptor($document, $descriptor);
 
