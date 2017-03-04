@@ -22,7 +22,6 @@ use Phlexible\Component\Formatter\FilesizeFormatter;
 use Phlexible\Component\MediaExtractor\Extractor\ExtractorInterface;
 use Phlexible\Component\MediaManager\Meta\FileMetaDataManager;
 use Phlexible\Component\MediaManager\Meta\FileMetaSetResolver;
-use Phlexible\Component\MediaManager\Volume\ExtendedFileInterface;
 use Phlexible\Component\MediaType\Model\MediaTypeManagerInterface;
 use Phlexible\Component\Volume\Model\FileInterface;
 use Phlexible\Component\Volume\Model\FolderInterface;

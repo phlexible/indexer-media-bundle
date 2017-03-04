@@ -6,6 +6,7 @@ services:
             - "@phlexible_indexer_media.media_document_mapper"
             - "@phlexible_queue.job_manager"
             - "@logger"
+            - "%phlexible_indexer_media.batch_size%"
         tags:
             - {name: phlexible_indexer.indexer}
             - {name: monolog.logger, channel: indexer}

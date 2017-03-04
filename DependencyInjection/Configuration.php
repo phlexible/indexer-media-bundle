@@ -33,6 +33,7 @@ class Configuration implements ConfigurationInterface
             ->addDefaultsIfNotSet()
             ->children()
                 ->scalarNode('storage')->defaultValue('phlexible_indexer.storage.default')->end()
+                ->integerNode('batch_size')->defaultValue(10)->end()
             ->end();
 
         return $treeBuilder;

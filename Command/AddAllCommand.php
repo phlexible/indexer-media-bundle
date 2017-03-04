@@ -54,6 +54,9 @@ class AddAllCommand extends ContainerAwareCommand
         if ($viaQueue) {
             $result = $indexer->queueAll();
         } else {
+            $this->getContainer()->get('doctrine.orm.default_entity_manager')->getConnection()->getConfiguration()
+                ->setSQLLogger(null);
+
             $result = $indexer->indexAll();
         }
 
