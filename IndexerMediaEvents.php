@@ -19,8 +19,17 @@ namespace Phlexible\Bundle\IndexerMediaBundle;
 class IndexerMediaEvents
 {
     /**
-     * Map Document Event
-     * Fired when a document is mapped.
+     * Fired when a media document is mapped.
      */
     const MAP_DOCUMENT = 'phlexible_indexer_media.map_document';
+
+    /**
+     * Fired before all media documents are indexed.
+     */
+    const INDEX_ALL_DOCUMENTS = 'phlexible_indexer_media.index_all_documents';
+
+    /**
+     * Fired before all media documents are queued.
+     */
+    const QUEUE_ALL_DOCUMENTS = 'phlexible_indexer_media.queue_all_documents';
 }

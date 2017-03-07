@@ -46,7 +46,7 @@ class MediaDocumentBuilderTest extends TestCase
     private $descriptor;
 
     /**
-     * @var DocumentFactory
+     * @var DocumentFactory|ObjectProphecy
      */
     private $documentFactory;
 
@@ -54,6 +54,16 @@ class MediaDocumentBuilderTest extends TestCase
      * @var MediaDocumentMapperInterface|ObjectProphecy
      */
     private $mapper;
+
+    /**
+     * @var IndexibleVoterInterface|ObjectProphecy
+     */
+    private $voter;
+
+    /**
+     * @var EventDispatcherInterface|ObjectProphecy
+     */
+    private $eventDispatcher;
 
     /**
      * @var MediaDocumentBuilder
@@ -71,13 +81,13 @@ class MediaDocumentBuilderTest extends TestCase
         $this->documentFactory->factory(MediaDocument::class)->willReturn($this->document);
         $this->mapper = $this->prophesize(MediaDocumentMapperInterface::class);
         $this->voter = $this->prophesize(IndexibleVoterInterface::class);
-        $this->dispatcher = $this->prophesize(EventDispatcherInterface::class);
+        $this->eventDispatcher = $this->prophesize(EventDispatcherInterface::class);
 
         $this->builder = new MediaDocumentBuilder(
             $this->documentFactory->reveal(),
             $this->mapper->reveal(),
             $this->voter->reveal(),
-            $this->dispatcher->reveal()
+            $this->eventDispatcher->reveal()
         );
     }
 
@@ -101,7 +111,7 @@ class MediaDocumentBuilderTest extends TestCase
     {
         $this->voter->isIndexible($this->descriptor)->willReturn(IndexibleVoterInterface::VOTE_ALLOW);
 
-        $this->dispatcher->dispatch(IndexerMediaEvents::MAP_DOCUMENT, Argument::type(MapDocumentEvent::class))->shouldBeCalled();
+        $this->eventDispatcher->dispatch(IndexerMediaEvents::MAP_DOCUMENT, Argument::type(MapDocumentEvent::class))->shouldBeCalled();
 
         $this->builder->build($this->descriptor);
     }

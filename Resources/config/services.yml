@@ -23,6 +23,7 @@ services:
             - "@phlexible_indexer_media.storage"
             - "@phlexible_indexer_media.media_content_identifier"
             - "@phlexible_queue.job_manager"
+            - "@event_dispatcher"
             - "@logger"
             - "%phlexible_indexer_media.batch_size%"
         tags:

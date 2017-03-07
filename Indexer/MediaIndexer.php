@@ -13,9 +13,11 @@ namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
+use Phlexible\Bundle\IndexerMediaBundle\IndexerMediaEvents;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
 use Phlexible\Component\Volume\Model\FileInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Media indexer.
@@ -46,6 +48,11 @@ class MediaIndexer implements MediaIndexerInterface
     private $jobManager;
 
     /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+
+    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -60,6 +67,7 @@ class MediaIndexer implements MediaIndexerInterface
      * @param StorageInterface                $storage
      * @param MediaContentIdentifierInterface $identifier
      * @param JobManagerInterface             $jobManager
+     * @param EventDispatcherInterface        $eventDispatcher
      * @param LoggerInterface                 $logger
      * @param int                             $batchSize
      */
@@ -68,6 +76,7 @@ class MediaIndexer implements MediaIndexerInterface
         StorageInterface $storage,
         MediaContentIdentifierInterface $identifier,
         JobManagerInterface $jobManager,
+        EventDispatcherInterface $eventDispatcher,
         LoggerInterface $logger,
         $batchSize = 10
     ) {
@@ -75,6 +84,7 @@ class MediaIndexer implements MediaIndexerInterface
         $this->storage = $storage;
         $this->identifier = $identifier;
         $this->jobManager = $jobManager;
+        $this->eventDispatcher = $eventDispatcher;
         $this->logger = $logger;
         $this->batchSize = $batchSize;
     }
@@ -290,11 +300,12 @@ class MediaIndexer implements MediaIndexerInterface
     public function indexAll()
     {
         $descriptors = $this->identifier->findAllDescriptors();
+        $operations = $this->storage->createOperations();
 
         $handled = 0;
         $batch = 0;
 
-        $operations = $this->storage->createOperations();
+        $this->eventDispatcher->dispatch(IndexerMediaEvents::INDEX_ALL_DOCUMENTS);
 
         foreach ($descriptors as $descriptor) {
             ++$handled;
@@ -336,12 +347,13 @@ class MediaIndexer implements MediaIndexerInterface
     public function queueAll()
     {
         $descriptors = $this->identifier->findAllDescriptors();
+        $operations = $this->storage->createOperations();
 
         $handled = 0;
         $batch = 0;
         $total = count($descriptors);
 
-        $operations = $this->storage->createOperations();
+        $this->eventDispatcher->dispatch(IndexerMediaEvents::QUEUE_ALL_DOCUMENTS);
 
         foreach ($descriptors as $descriptor) {
             ++$handled;
