@@ -27,6 +27,29 @@ services:
             - "@event_dispatcher"
             - "@logger"
 
+    # commands
+    phlexible_indexer_media.command.add_all:
+        class: Phlexible\Bundle\IndexerMediaBundle\Command\AddAllCommand
+        arguments:
+            - "@phlexible_indexer_media.media_indexer"
+            - "@doctrine.orm.default_connection"
+        tags:
+            - {name: console.command}
+
+    phlexible_indexer_media.command.add:
+        class: Phlexible\Bundle\IndexerMediaBundle\Command\AddAllCommand
+        arguments:
+            - "@phlexible_indexer_media.media_indexer"
+        tags:
+            - {name: console.command}
+
+    phlexible_indexer_media.command.delete:
+        class: Phlexible\Bundle\IndexerMediaBundle\Command\AddAllCommand
+        arguments:
+            - "@phlexible_indexer_media.media_indexer"
+        tags:
+            - {name: console.command}
+
     # event listeners
     phlexible_indexer_media.listener.file:
         class: Phlexible\Bundle\IndexerMediaBundle\EventListener\FileListener

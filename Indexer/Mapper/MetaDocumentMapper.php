@@ -9,21 +9,19 @@
  * file that was distributed with this source code.
  */
 
-namespace Phlexible\Bundle\IndexerMediaBundle\Indexer\DocumentApplier;
+namespace Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 use Phlexible\Component\MediaManager\Meta\FileMetaDataManager;
 use Phlexible\Component\MediaManager\Meta\FileMetaSetResolver;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Meta document applier.
+ * Meta document mapper.
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
-class MetaDocumentApplier implements DocumentApplierInterface
+class MetaDocumentMapper implements MediaDocumentMapperInterface
 {
     /**
      * @var FileMetaSetResolver
@@ -36,38 +34,16 @@ class MetaDocumentApplier implements DocumentApplierInterface
     private $metaDataManager;
 
     /**
-     * @var EventDispatcherInterface
-     */
-    private $dispatcher;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
      * @param FileMetaSetResolver      $metasetResolver
      * @param FileMetaDataManager      $metaDataManager
-     * @param EventDispatcherInterface $dispatcher
-     * @param LoggerInterface          $logger
      */
-    public function __construct(
-        FileMetaSetResolver $metasetResolver,
-        FileMetaDataManager $metaDataManager,
-        EventDispatcherInterface $dispatcher,
-        LoggerInterface $logger
-    ) {
+    public function __construct(FileMetaSetResolver $metasetResolver, FileMetaDataManager $metaDataManager)
+    {
         $this->metasetResolver = $metasetResolver;
         $this->metaDataManager = $metaDataManager;
-        $this->dispatcher = $dispatcher;
-        $this->logger = $logger;
     }
 
-    /**
-     * @param DocumentInterface       $document
-     * @param MediaDocumentDescriptor $descriptor
-     */
-    public function apply(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
+    public function mapDocument(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
     {
         $metasets = $this->metasetResolver->resolve($descriptor->getFile());
         $metasetNames = array();
@@ -91,6 +67,5 @@ class MetaDocumentApplier implements DocumentApplierInterface
 
         $document->set('metasets', $metasetNames);
         $document->set('tags', $metaData);
-
     }
 }

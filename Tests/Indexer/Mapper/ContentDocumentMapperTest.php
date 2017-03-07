@@ -9,24 +9,22 @@
  * file that was distributed with this source code.
  */
 
-namespace Phlexible\Bundle\IndexerMediaBundle\Tests\Indexer\DocumentApplier;
+namespace Phlexible\Bundle\IndexerMediaBundle\Tests\Indexer\Mapper;
 
 use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
-use Phlexible\Bundle\IndexerMediaBundle\Indexer\DocumentApplier\ContentDocumentApplier;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\ContentDocumentMapper;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\IndexibleVoterInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Tests\MediaDescriptorTrait;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Content document applier test.
+ * Content document mapper test.
  *
  * @author Stephan Wentz <sw@brainbits.net>
  *
- * @covers \Phlexible\Bundle\IndexerMediaBundle\Indexer\DocumentApplier\ContentDocumentApplier
+ * @covers \Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\ContentDocumentMapper
  */
-class ContentDocumentApplierTest extends TestCase
+class ContentDocumentMapperTest extends TestCase
 {
     use MediaDescriptorTrait;
 
@@ -36,53 +34,37 @@ class ContentDocumentApplierTest extends TestCase
     private $contentIndexibleVoter;
 
     /**
-     * @var ContentDocumentApplier
+     * @var ContentDocumentMapper
      */
     private $applier;
-
-    /**
-     * @var EventDispatcherInterface
-     */
-    private $dispatcher;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
 
     public function setUp()
     {
         $this->contentIndexibleVoter = $this->prophesize(IndexibleVoterInterface::class);
-        $this->dispatcher = $this->prophesize(EventDispatcherInterface::class);
-        $this->logger = $this->prophesize(LoggerInterface::class);
 
-        $this->applier = new ContentDocumentApplier(
-            $this->contentIndexibleVoter->reveal(),
-            $this->dispatcher->reveal(),
-            $this->logger->reveal()
-        );
+        $this->applier = new ContentDocumentMapper($this->contentIndexibleVoter->reveal());
     }
 
-    public function testApplyIsCalledForVoterAllow()
+    public function testMapDocumentIsCalledForVoterAllow()
     {
         $document = new MediaDocument();
         $descriptor = $this->createDescriptor();
 
         $this->contentIndexibleVoter->isIndexible($descriptor)->willReturn(IndexibleVoterInterface::VOTE_ALLOW);
 
-        $this->applier->apply($document, $descriptor);
+        $this->applier->mapDocument($document, $descriptor);
 
         $this->assertNotEmpty($document->get('mediafile'));
     }
 
-    public function testApplyIsCalledForVoterDeny()
+    public function testMapDocumentIsCalledForVoterDeny()
     {
         $document = new MediaDocument();
         $descriptor = $this->createDescriptor();
 
         $this->contentIndexibleVoter->isIndexible($descriptor)->willReturn(IndexibleVoterInterface::VOTE_DENY);
 
-        $this->applier->apply($document, $descriptor);
+        $this->applier->mapDocument($document, $descriptor);
 
         $this->assertEmpty($document->get('mediafile'));
     }

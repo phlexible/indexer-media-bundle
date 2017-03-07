@@ -1,0 +1,30 @@
+services:
+    phlexible_indexer_media.document_mapper:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\ChainDocumentMapper
+        public: false
+        arguments:
+            -
+                - "@phlexible_indexer_media.base_document_mapper"
+                - "@phlexible_indexer_media.meta_document_mapper"
+                - "@phlexible_indexer_media.content_document_mapper"
+
+    phlexible_indexer_media.base_document_mapper:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\BaseDocumentMapper
+        public: false
+
+    phlexible_indexer_media.content_document_mapper:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\ContentDocumentMapper
+        public: false
+        arguments:
+            - "@phlexible_indexer_media.indexible_content_voter"
+        tags:
+            - {name: monolog.logger, channel: indexer}
+
+    phlexible_indexer_media.meta_document_mapper:
+        class: Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\MetaDocumentMapper
+        public: false
+        arguments:
+            - "@phlexible_media_manager.file_meta_set_resolver"
+            - "@phlexible_media_manager.file_meta_data_manager"
+        tags:
+            - {name: monolog.logger, channel: indexer}

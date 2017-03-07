@@ -17,6 +17,8 @@ use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaContentIdentifier;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 use Phlexible\Bundle\MediaManagerBundle\Entity\File;
 use Phlexible\Bundle\MediaManagerBundle\Entity\Folder;
+use Phlexible\Component\Volume\Model\FileInterface;
+use Phlexible\Component\Volume\Model\FolderInterface;
 use Phlexible\Component\Volume\Volume;
 use Phlexible\Component\Volume\VolumeManager;
 use PHPUnit\Framework\TestCase;
@@ -75,16 +77,18 @@ class MediaContentIdentifierTest extends TestCase
     public function testCreateIdentityFromFile()
     {
         $volume = $this->prophesize(Volume::class);
-        $folder = new Folder();
-        $file = new File();
-        $file->setFolder($folder);
-        $file->setVolume($volume->reveal());
+        $folder = $this->prophesize(FolderInterface::class);
+        $file = $this->prophesize(FileInterface::class);
+        $file->getId()->willReturn('foo');
+        $file->getVersion()->willReturn(1);
+        $file->getFolder()->willReturn($folder->reveal());
+        $file->getVolume()->willReturn($volume->reveal());
 
-        $descriptor = $this->identifier->createDescriptorFromFile($file);
+        $descriptor = $this->identifier->createDescriptorFromFile($file->reveal());
 
         $this->assertInstanceOf(MediaDocumentDescriptor::class, $descriptor);
-        $this->assertSame($file, $descriptor->getFile());
-        $this->assertSame($folder, $descriptor->getFolder());
+        $this->assertSame($file->reveal(), $descriptor->getFile());
+        $this->assertSame($folder->reveal(), $descriptor->getFolder());
         $this->assertSame($volume->reveal(), $descriptor->getVolume());
     }
 
@@ -94,21 +98,21 @@ class MediaContentIdentifierTest extends TestCase
     public function testCreateIdentityFromIdentifier()
     {
         $volume = $this->prophesize(Volume::class);
-        $folder = new Folder();
-        $file = new File();
-        $file->setFolder($folder);
-        $file->setVolume($volume->reveal());
+        $folder = $this->prophesize(FolderInterface::class);
+        $file = $this->prophesize(FileInterface::class);
+        $file->getFolder()->willReturn($folder->reveal());
+        $file->getVolume()->willReturn($volume->reveal());
 
         $this->volumeManager->findByFileId('2C265ABC-ABB2-4AC4-8004-85562394C343')->willReturn($volume->reveal());
-        $volume->findFile('2C265ABC-ABB2-4AC4-8004-85562394C343', 2)->willReturn($file);
+        $volume->findFile('2C265ABC-ABB2-4AC4-8004-85562394C343', 2)->willReturn($file->reveal());
 
         $identity = new DocumentIdentity('media_2C265ABC-ABB2-4AC4-8004-85562394C343_2');
         $descriptor = $this->identifier->createDescriptorFromIdentity($identity);
 
         $this->assertInstanceOf(MediaDocumentDescriptor::class, $descriptor);
         $this->assertSame($identity, $descriptor->getIdentity());
-        $this->assertSame($file, $descriptor->getFile());
-        $this->assertSame($folder, $descriptor->getFolder());
+        $this->assertSame($file->reveal(), $descriptor->getFile());
+        $this->assertSame($folder->reveal(), $descriptor->getFolder());
         $this->assertSame($volume->reveal(), $descriptor->getVolume());
     }
 }

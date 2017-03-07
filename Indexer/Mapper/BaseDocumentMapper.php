@@ -9,51 +9,37 @@
  * file that was distributed with this source code.
  */
 
-namespace Phlexible\Bundle\IndexerMediaBundle\Indexer\DocumentApplier;
+namespace Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 use Phlexible\Component\Formatter\FilesizeFormatter;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Phlexible\Component\MediaManager\Volume\ExtendedFileInterface;
 
 /**
  * Base document applier.
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
-class BaseDocumentApplier implements DocumentApplierInterface
+class BaseDocumentMapper implements MediaDocumentMapperInterface
 {
     /**
-     * @var EventDispatcherInterface
+     * @var FilesizeFormatter
      */
-    private $dispatcher;
+    private $formatter;
 
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @param EventDispatcherInterface       $dispatcher
-     * @param LoggerInterface                $logger
-     */
-    public function __construct(
-        EventDispatcherInterface $dispatcher,
-        LoggerInterface $logger
-    ) {
-        $this->dispatcher = $dispatcher;
-        $this->logger = $logger;
+    public function __construct()
+    {
+        $this->formatter = new FilesizeFormatter();
     }
 
     /**
      * @param DocumentInterface       $document
      * @param MediaDocumentDescriptor $descriptor
      */
-    public function apply(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
+    public function mapDocument(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
     {
-        $formatter = new FilesizeFormatter();
-        $readableFileSize = $formatter->formatFilesize($descriptor->getFile()->getSize());
+        $readableFileSize = $this->formatter->formatFilesize($descriptor->getFile()->getSize());
 
         $parentFolderIds = array();
         $parentFolder = $descriptor->getFolder();
@@ -75,9 +61,14 @@ class BaseDocumentApplier implements DocumentApplierInterface
             ->set('file_version', $descriptor->getFile()->getVersion())
             ->set('filename', $descriptor->getFile()->getName())
             ->set('mime_type', $descriptor->getFile()->getMimeType())
-            ->set('media_category', $descriptor->getFile()->getMediaCategory())
-            ->set('media_type', $descriptor->getFile()->getMediaType())
             ->set('filesize', $descriptor->getFile()->getSize())
             ->set('readable_filesize', $readableFileSize);
+
+        if ($descriptor->getFile() instanceof ExtendedFileInterface) {
+            $document
+                ->set('media_category', $descriptor->getFile()->getMediaCategory())
+                ->set('media_type', $descriptor->getFile()->getMediaType());
+
+        }
     }
 }

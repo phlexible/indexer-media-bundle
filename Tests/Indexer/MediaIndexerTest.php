@@ -16,14 +16,12 @@ use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerBundle\Storage\Operation\Operations;
 use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\MediaDocumentMapperInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaContentIdentifierInterface;
-use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
-use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentMapper;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentBuilder;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexer;
-use Phlexible\Bundle\MediaManagerBundle\Entity\File;
-use Phlexible\Bundle\MediaManagerBundle\Entity\Folder;
+use Phlexible\Bundle\IndexerMediaBundle\Tests\MediaDescriptorTrait;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
-use Phlexible\Component\Volume\Volume;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -36,15 +34,17 @@ use Psr\Log\LoggerInterface;
  */
 class MediaIndexerTest extends TestCase
 {
+    use MediaDescriptorTrait;
+
     /**
      * @var MediaDocument
      */
     private $document;
 
     /**
-     * @var DocumentFactory
+     * @var MediaDocumentBuilder
      */
-    private $documentFactory;
+    private $builder;
 
     /**
      * @var MediaIndexer
@@ -55,11 +55,6 @@ class MediaIndexerTest extends TestCase
      * @var StorageInterface|ObjectProphecy
      */
     private $storage;
-
-    /**
-     * @var MediaDocumentMapper|ObjectProphecy
-     */
-    private $mapper;
 
     /**
      * @var MediaContentIdentifierInterface|ObjectProphecy
@@ -81,20 +76,18 @@ class MediaIndexerTest extends TestCase
         $this->document = new MediaDocument();
         $this->document->setIdentity(new DocumentIdentity('A'));
 
-        $this->documentFactory = $this->prophesize(DocumentFactory::class);
-        $this->documentFactory->factory(MediaDocument::class)->willReturn($this->document);
+        $this->builder = $this->prophesize(MediaDocumentBuilder::class);
         $this->storage = $this->prophesize(StorageInterface::class);
-        $this->mapper = $this->prophesize(MediaDocumentMapper::class);
         $this->identifier = $this->prophesize(MediaContentIdentifierInterface::class);
+        $this->identifier->willImplement(MediaContentIdentifierInterface::class);
         $this->jobManager = $this->prophesize(JobManagerInterface::class);
         $this->logger = $this->prophesize(LoggerInterface::class);
 
         $this->storage->createOperations()->willReturn(new Operations());
 
         $this->indexer = new MediaIndexer(
-            $this->documentFactory->reveal(),
+            $this->builder->reveal(),
             $this->storage->reveal(),
-            $this->mapper->reveal(),
             $this->identifier->reveal(),
             $this->jobManager->reveal(),
             $this->logger->reveal()
@@ -122,10 +115,10 @@ class MediaIndexerTest extends TestCase
     public function testAdd()
     {
         $identity = new DocumentIdentity('media_74_1');
-        $descriptor = new MediaDocumentDescriptor($identity, $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+        $descriptor = $this->createDescriptor();
 
         $this->identifier->createDescriptorFromIdentity($identity)->willReturn($descriptor);
-        $this->mapper->mapDocument($this->document, $descriptor)->shouldBeCalled()->willReturn(true);
+        $this->builder->build($descriptor)->shouldBeCalled()->willReturn($this->document);
 
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
@@ -156,10 +149,10 @@ class MediaIndexerTest extends TestCase
     public function testUpdate()
     {
         $identity = new DocumentIdentity('media_74_1');
-        $descriptor = new MediaDocumentDescriptor($identity, $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+        $descriptor = $this->createDescriptor();
 
         $this->identifier->createDescriptorFromIdentity($identity)->willReturn($descriptor);
-        $this->mapper->mapDocument($this->document, $descriptor)->shouldBeCalled()->willReturn(true);
+        $this->builder->build($descriptor)->shouldBeCalled()->willReturn($this->document);
 
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
@@ -190,10 +183,10 @@ class MediaIndexerTest extends TestCase
     public function testDelete()
     {
         $identity = new DocumentIdentity('media_74_1');
-        $descriptor = new MediaDocumentDescriptor($identity, $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+        $descriptor = $this->createDescriptor();
 
         $this->identifier->createDescriptorFromIdentity($identity)->willReturn($descriptor);
-        $this->mapper->mapDocument($this->document, $descriptor)->shouldBeCalled()->willReturn(true);
+        $this->builder->build($descriptor)->shouldBeCalled()->willReturn($this->document);
 
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
@@ -223,11 +216,13 @@ class MediaIndexerTest extends TestCase
 
     public function testIndexAll()
     {
-        $descriptor1 = new MediaDocumentDescriptor(new DocumentIdentity('media_74_1'), $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
-        $descriptor2 = new MediaDocumentDescriptor(new DocumentIdentity('media_75_2'), $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+        $descriptor1 = $this->createDescriptor();
+        $descriptor2 = $this->createDescriptor();
+
         $this->identifier->findAllDescriptors()->willReturn(array($descriptor1, $descriptor2));
-        $this->mapper->mapDocument(Argument::type(MediaDocument::class), $descriptor1)->shouldBeCalled()->willReturn(true);
-        $this->mapper->mapDocument(Argument::type(MediaDocument::class), $descriptor2)->shouldBeCalled()->willReturn(true);
+
+        $this->builder->build($descriptor1)->shouldBeCalled()->willReturn($this->document);
+        $this->builder->build($descriptor2)->shouldBeCalled()->willReturn($this->document);
 
         $this->storage->execute(Argument::cetera())->shouldBeCalled();
         $this->storage->queue(Argument::cetera())->shouldNotBeCalled();
@@ -237,10 +232,14 @@ class MediaIndexerTest extends TestCase
 
     public function testQueueAll()
     {
-        $descriptor1 = new MediaDocumentDescriptor(new DocumentIdentity('media_74_1'), $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
-        $descriptor2 = new MediaDocumentDescriptor(new DocumentIdentity('media_75_2'), $this->prophesize(Volume::class)->reveal(), new File(), new Folder());
+        $descriptor1 = $this->createDescriptor();
+        $descriptor2 = $this->createDescriptor();
+
         $this->identifier->findAllDescriptors()->willReturn(array($descriptor1, $descriptor2));
-        $this->mapper->mapDocument(Argument::cetera())->shouldNotBeCalled();
+
+        $this->builder->build($descriptor1)->shouldNotBeCalled();
+        $this->builder->build($descriptor2)->shouldNotBeCalled();
+
         $this->storage->execute(Argument::cetera())->shouldNotBeCalled();
         $this->storage->queue(Argument::cetera())->shouldBeCalled();
 

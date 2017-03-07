@@ -11,36 +11,29 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Indexer;
 
-use Phlexible\Bundle\IndexerBundle\Document\DocumentFactory;
 use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
-use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
-use Phlexible\Bundle\IndexerBundle\Indexer\IndexerInterface;
 use Phlexible\Bundle\IndexerBundle\Storage\StorageInterface;
-use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
 use Phlexible\Bundle\QueueBundle\Model\JobManagerInterface;
+use Phlexible\Component\Volume\Model\FileInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Media indexer.
  *
+ * @author Stephan Wentz <sw@brainbits.net>
  * @author Phillip Look <pl@brainbits.net>
  */
-class MediaIndexer implements IndexerInterface
+class MediaIndexer implements MediaIndexerInterface
 {
     /**
-     * @var DocumentFactory
+     * @var MediaDocumentBuilder
      */
-    private $documentFactory;
+    private $builder;
 
     /**
      * @var StorageInterface
      */
     private $storage;
-
-    /**
-     * @var MediaDocumentMapper
-     */
-    private $mapper;
 
     /**
      * @var MediaContentIdentifierInterface
@@ -58,42 +51,31 @@ class MediaIndexer implements IndexerInterface
     private $logger;
 
     /**
-     * @var string
-     */
-    private $documentClass;
-
-    /**
      * @var int
      */
     private $batchSize;
 
     /**
-     * @param DocumentFactory                 $documentFactory
+     * @param MediaDocumentBuilder            $builder
      * @param StorageInterface                $storage
-     * @param MediaDocumentMapper             $mapper
      * @param MediaContentIdentifierInterface $identifier
      * @param JobManagerInterface             $jobManager
      * @param LoggerInterface                 $logger
-     * @param string                          $documentClass
      * @param int                             $batchSize
      */
     public function __construct(
-        DocumentFactory $documentFactory,
+        MediaDocumentBuilder $builder,
         StorageInterface $storage,
-        MediaDocumentMapper $mapper,
         MediaContentIdentifierInterface $identifier,
         JobManagerInterface $jobManager,
         LoggerInterface $logger,
-        $documentClass = MediaDocument::class,
         $batchSize = 10
     ) {
-        $this->documentFactory = $documentFactory;
+        $this->builder = $builder;
         $this->storage = $storage;
-        $this->mapper = $mapper;
         $this->identifier = $identifier;
         $this->jobManager = $jobManager;
         $this->logger = $logger;
-        $this->documentClass = $documentClass;
         $this->batchSize = $batchSize;
     }
 
@@ -157,13 +139,11 @@ class MediaIndexer implements IndexerInterface
      */
     private function executeIdentityOperation($method, DocumentIdentity $identity)
     {
-        $descriptor = $this->identifier->createDescriptorFromIdentity($identity);
-        if (!$descriptor) {
+        if (!($descriptor = $this->identifier->createDescriptorFromIdentity($identity))) {
             return;
         }
 
-        $document = $this->createDocument();
-        if (!$this->mapper->mapDocument($document, $descriptor)) {
+        if (!($document = $this->builder->build($descriptor))) {
             return;
         }
 
@@ -182,8 +162,7 @@ class MediaIndexer implements IndexerInterface
      */
     private function executeDescriptorOperation($method, MediaDocumentDescriptor $descriptor)
     {
-        $document = $this->createDocument();
-        if (!$this->mapper->mapDocument($document, $descriptor)) {
+        if (!($document = $this->builder->build($descriptor))) {
             return;
         }
 
@@ -194,6 +173,69 @@ class MediaIndexer implements IndexerInterface
             ->commit();
 
         $this->storage->execute($operations);
+    }
+
+    /**
+     * @param FileInterface $file
+     * @param bool          $viaQueue
+     *
+     * @return bool
+     */
+    public function addFile(FileInterface $file, $viaQueue = false)
+    {
+        $this->logger->debug("addFile {$file->getId()} {$file->getVersion()}");
+
+        $descriptor = $this->identifier->createDescriptorFromFile($file);
+
+        if ($viaQueue) {
+            $this->queueDescriptorOperation('add', $descriptor);
+        } else {
+            $this->executeDescriptorOperation('add', $descriptor);
+        }
+
+        return 1;
+    }
+
+    /**
+     * @param FileInterface $file
+     * @param bool          $viaQueue
+     *
+     * @return bool
+     */
+    public function updateFile(FileInterface $file, $viaQueue = false)
+    {
+        $this->logger->debug("updateFile {$file->getId()} {$file->getVersion()}");
+
+        $descriptor = $this->identifier->createDescriptorFromFile($file);
+
+        if ($viaQueue) {
+            $this->queueDescriptorOperation('update', $descriptor);
+        } else {
+            $this->executeDescriptorOperation('update', $descriptor);
+        }
+
+        return 1;
+    }
+
+    /**
+     * @param FileInterface $file
+     * @param bool          $viaQueue
+     *
+     * @return bool
+     */
+    public function deleteFile(FileInterface $file, $viaQueue = false)
+    {
+        $this->logger->debug("deleteFile {$file->getId()} {$file->getVersion()}");
+
+        $descriptor = $this->identifier->createDescriptorFromFile($file);
+
+        if ($viaQueue) {
+            $this->queueDescriptorOperation('delete', $descriptor);
+        } else {
+            $this->executeDescriptorOperation('delete', $descriptor);
+        }
+
+        return 1;
     }
 
     /**
@@ -259,8 +301,7 @@ class MediaIndexer implements IndexerInterface
 
             $this->logger->info("indexAll add {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
 
-            $document = $this->createDocument();
-            if (!$this->mapper->mapDocument($document, $descriptor)) {
+            if (!($document = $this->builder->build($descriptor))) {
                 $this->logger->warning("indexAll skipping {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
                 continue;
             }
@@ -331,13 +372,5 @@ class MediaIndexer implements IndexerInterface
         }
 
         return $handled;
-    }
-
-    /**
-     * @return DocumentInterface
-     */
-    public function createDocument()
-    {
-        return $this->documentFactory->factory($this->documentClass);
     }
 }

@@ -12,7 +12,8 @@
 namespace Phlexible\Bundle\IndexerMediaBundle\Command;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexerInterface;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -22,8 +23,17 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
-class AddCommand extends ContainerAwareCommand
+class AddCommand extends Command
 {
+    private $indexer;
+
+    public function __construct(MediaIndexerInterface $indexer)
+    {
+        parent::__construct();
+
+        $this->indexer = $indexer;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -47,16 +57,15 @@ class AddCommand extends ContainerAwareCommand
         $fileId = $input->getArgument('fileId');
         $fileVersion = $input->getArgument('fileVersion');
 
-        $indexer = $this->getContainer()->get('phlexible_indexer_media.media_indexer');
-        $storage = $indexer->getStorage();
+        $storage = $this->indexer->getStorage();
 
-        $output->writeln('Indexer: '.$indexer->getName());
+        $output->writeln('Indexer: '.get_class($this->indexer));
         $output->writeln('  Storage: '.get_class($storage));
         $output->writeln('    DSN: '.$storage->getConnectionString());
 
         $identifier = new DocumentIdentity("media_{$fileId}_{$fileVersion}");
 
-        if (!$indexer->add($identifier)) {
+        if (!$this->indexer->add($identifier)) {
             $output->writeln("<error>Document $identifier could not be loaded.</error>");
 
             return 1;

@@ -9,21 +9,21 @@
  * file that was distributed with this source code.
  */
 
-namespace Phlexible\Bundle\IndexerMediaBundle\Indexer\DocumentApplier;
+namespace Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 
 /**
- * Document applier interface.
+ * Media document mapper interface.
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
-interface DocumentApplierInterface
+interface MediaDocumentMapperInterface
 {
     /**
      * @param DocumentInterface       $document
      * @param MediaDocumentDescriptor $descriptor
      */
-    public function apply(DocumentInterface $document, MediaDocumentDescriptor $descriptor);
+    public function mapDocument(DocumentInterface $document, MediaDocumentDescriptor $descriptor);
 }

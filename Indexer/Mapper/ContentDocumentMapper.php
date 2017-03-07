@@ -9,20 +9,18 @@
  * file that was distributed with this source code.
  */
 
-namespace Phlexible\Bundle\IndexerMediaBundle\Indexer\DocumentApplier;
+namespace Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper;
 
 use Phlexible\Bundle\IndexerBundle\Document\DocumentInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\IndexibleVoterInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Content document applier.
+ * Content document mapper.
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
-class ContentDocumentApplier implements DocumentApplierInterface
+class ContentDocumentMapper implements MediaDocumentMapperInterface
 {
     /**
      * @var IndexibleVoterInterface
@@ -30,35 +28,14 @@ class ContentDocumentApplier implements DocumentApplierInterface
     private $indexibleContentVoter;
 
     /**
-     * @var EventDispatcherInterface
-     */
-    private $dispatcher;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
      * @param IndexibleVoterInterface  $indexibleContentVoter
-     * @param EventDispatcherInterface $dispatcher
-     * @param LoggerInterface          $logger
      */
-    public function __construct(
-        IndexibleVoterInterface $indexibleContentVoter,
-        EventDispatcherInterface $dispatcher,
-        LoggerInterface $logger
-    ) {
+    public function __construct(IndexibleVoterInterface $indexibleContentVoter)
+    {
         $this->indexibleContentVoter = $indexibleContentVoter;
-        $this->dispatcher = $dispatcher;
-        $this->logger = $logger;
     }
 
-    /**
-     * @param DocumentInterface       $document
-     * @param MediaDocumentDescriptor $descriptor
-     */
-    public function apply(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
+    public function mapDocument(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
     {
         if (IndexibleVoterInterface::VOTE_ALLOW === $this->indexibleContentVoter->isIndexible($descriptor)) {
             $content = base64_encode(file_get_contents($descriptor->getFile()->getPhysicalPath()));
