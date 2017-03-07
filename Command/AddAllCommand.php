@@ -11,7 +11,6 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Command;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaIndexerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,13 +25,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 class AddAllCommand extends Command
 {
     private $indexer;
-    private $entityManager;
 
-    public function __construct(MediaIndexerInterface $indexer, EntityManagerInterface $entityManager)
+    public function __construct(MediaIndexerInterface $indexer)
     {
         parent::__construct();
 
-        $this->entityManager = $entityManager;
+        $this->indexer = $indexer;
     }
 
     /**
@@ -65,8 +63,6 @@ class AddAllCommand extends Command
         if ($viaQueue) {
             $result = $this->indexer->queueAll();
         } else {
-            $this->entityManager->getConnection()->getConfiguration()->setSQLLogger(null);
-
             $result = $this->indexer->indexAll();
         }
 
