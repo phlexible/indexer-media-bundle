@@ -32,7 +32,6 @@ services:
         class: Phlexible\Bundle\IndexerMediaBundle\Command\AddAllCommand
         arguments:
             - "@phlexible_indexer_media.media_indexer"
-            - "@doctrine.orm.default_connection"
         tags:
             - {name: console.command}
 
