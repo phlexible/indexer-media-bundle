@@ -12,7 +12,6 @@
 namespace Phlexible\Bundle\IndexerMediaBundle\Tests\Indexer\IndexibleVoter;
 
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\FileExistsIndexibleVoter;
-use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 use Phlexible\Bundle\IndexerMediaBundle\Tests\MediaDescriptorTrait;
 use PHPUnit\Framework\TestCase;
 

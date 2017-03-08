@@ -12,8 +12,8 @@
 namespace Phlexible\Bundle\IndexerMediaBundle\Tests\Indexer\Mapper;
 
 use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
-use Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\ContentDocumentMapper;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\IndexibleVoterInterface;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\ContentDocumentMapper;
 use Phlexible\Bundle\IndexerMediaBundle\Tests\MediaDescriptorTrait;
 use PHPUnit\Framework\TestCase;
 

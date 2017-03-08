@@ -34,8 +34,8 @@ class MetaDocumentMapper implements MediaDocumentMapperInterface
     private $metaDataManager;
 
     /**
-     * @param FileMetaSetResolver      $metasetResolver
-     * @param FileMetaDataManager      $metaDataManager
+     * @param FileMetaSetResolver $metasetResolver
+     * @param FileMetaDataManager $metaDataManager
      */
     public function __construct(FileMetaSetResolver $metasetResolver, FileMetaDataManager $metaDataManager)
     {

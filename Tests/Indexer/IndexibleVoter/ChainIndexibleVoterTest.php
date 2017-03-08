@@ -11,9 +11,9 @@
 
 namespace Phlexible\Bundle\IndexerMediaBundle\Tests\Indexer\IndexibleVoter;
 
-use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\ChainIndexibleVoter;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\IndexibleVoterInterface;
+use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 use Phlexible\Bundle\IndexerMediaBundle\Tests\MediaDescriptorTrait;
 use PHPUnit\Framework\TestCase;
 

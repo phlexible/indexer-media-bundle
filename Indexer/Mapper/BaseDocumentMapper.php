@@ -68,7 +68,6 @@ class BaseDocumentMapper implements MediaDocumentMapperInterface
             $document
                 ->set('media_category', $descriptor->getFile()->getMediaCategory())
                 ->set('media_type', $descriptor->getFile()->getMediaType());
-
         }
     }
 }

@@ -12,15 +12,12 @@
 namespace Phlexible\Bundle\IndexerMediaBundle\Tests\Mapper;
 
 use Phlexible\Bundle\IndexerMediaBundle\Document\MediaDocument;
-use Phlexible\Bundle\IndexerMediaBundle\Event\MapDocumentEvent;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\IndexibleVoterInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\MediaDocumentMapperInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\Mapper\ChainDocumentMapper;
-use Phlexible\Bundle\IndexerMediaBundle\IndexerMediaEvents;
 use Phlexible\Bundle\IndexerMediaBundle\Tests\MediaDescriptorTrait;
 use PHPUnit\Framework\TestCase;
-use Prophecy\Argument;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**

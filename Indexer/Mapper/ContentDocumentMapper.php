@@ -28,7 +28,7 @@ class ContentDocumentMapper implements MediaDocumentMapperInterface
     private $indexibleContentVoter;
 
     /**
-     * @param IndexibleVoterInterface  $indexibleContentVoter
+     * @param IndexibleVoterInterface $indexibleContentVoter
      */
     public function __construct(IndexibleVoterInterface $indexibleContentVoter)
     {

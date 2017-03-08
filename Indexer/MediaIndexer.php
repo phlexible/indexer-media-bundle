@@ -136,6 +136,7 @@ class MediaIndexer implements MediaIndexerInterface
     {
         return $this->storage->countType($this->createDocument()->getName());
     }
+
     /**
      * @param string           $method
      * @param DocumentIdentity $identity

@@ -15,8 +15,6 @@ use Phlexible\Bundle\IndexerBundle\Document\DocumentIdentity;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\IndexibleVoter\IndexibleVoterInterface;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaContentIdentifier;
 use Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaDocumentDescriptor;
-use Phlexible\Bundle\MediaManagerBundle\Entity\File;
-use Phlexible\Bundle\MediaManagerBundle\Entity\Folder;
 use Phlexible\Component\Volume\Model\FileInterface;
 use Phlexible\Component\Volume\Model\FolderInterface;
 use Phlexible\Component\Volume\Volume;
