@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @author Stephan Wentz <sw@brainbits.net>
  *
- * @covers \Phlexible\Bundle\IndexerMediaBundle\Indexer\ContentIdentifier
+ * @covers \Phlexible\Bundle\IndexerMediaBundle\Indexer\MediaContentIdentifier
  */
 class MediaContentIdentifierTest extends TestCase
 {
