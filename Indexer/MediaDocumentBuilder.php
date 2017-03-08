@@ -76,7 +76,7 @@ class MediaDocumentBuilder
     /**
      * @param MediaDocumentDescriptor $descriptor
      *
-     * @return null|DocumentInterface
+     * @return null|MediaDocument
      */
     public function build(MediaDocumentDescriptor $descriptor)
     {
@@ -84,7 +84,7 @@ class MediaDocumentBuilder
             return null;
         }
 
-        $document = $this->documentFactory->factory($this->documentClass);
+        $document = $this->createDocument();
 
         $this->mapper->mapDocument($document, $descriptor);
 
@@ -92,5 +92,13 @@ class MediaDocumentBuilder
         $this->dispatcher->dispatch(IndexerMediaEvents::MAP_DOCUMENT, $event);
 
         return $document;
+    }
+
+    /**
+     * @return MediaDocument
+     */
+    public function createDocument()
+    {
+        return $this->documentFactory->factory($this->documentClass);
     }
 }

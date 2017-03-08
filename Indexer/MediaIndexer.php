@@ -108,11 +108,34 @@ class MediaIndexer implements MediaIndexerInterface
     /**
      * {@inheritdoc}
      */
+    public function createDocument()
+    {
+        return $this->builder->createDocument();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function supports(DocumentIdentity $identity)
     {
         return $this->identifier->validateIdentity($identity);
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function find(DocumentIdentity $identity)
+    {
+        return $this->storage->find($identity);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function count()
+    {
+        return $this->storage->countType($this->createDocument()->getName());
+    }
     /**
      * @param string           $method
      * @param DocumentIdentity $identity
@@ -310,7 +333,7 @@ class MediaIndexer implements MediaIndexerInterface
         foreach ($descriptors as $descriptor) {
             ++$handled;
 
-            $this->logger->info("indexAll add {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
+            $this->logger->info("indexAll add {$descriptor->getIdentity()}");
 
             if (!($document = $this->builder->build($descriptor))) {
                 $this->logger->warning("indexAll skipping {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
@@ -358,7 +381,7 @@ class MediaIndexer implements MediaIndexerInterface
         foreach ($descriptors as $descriptor) {
             ++$handled;
 
-            $this->logger->info("queueAll add {$descriptor->getFile()->getId()} {$descriptor->getFile()->getVersion()}");
+            $this->logger->info("queueAll add {$descriptor->getIdentity()}");
 
             $operations->addIdentity($descriptor->getIdentity());
 

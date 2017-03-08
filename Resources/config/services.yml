@@ -13,7 +13,6 @@ services:
             - "@event_dispatcher"
             - "%phlexible_indexer_media.document_class%"
         tags:
-            - {name: phlexible_indexer.indexer}
             - {name: monolog.logger, channel: indexer}
 
     phlexible_indexer_media.media_indexer:
@@ -47,6 +46,13 @@ services:
 
     phlexible_indexer_media.command.delete:
         class: Phlexible\Bundle\IndexerMediaBundle\Command\AddAllCommand
+        arguments:
+            - "@phlexible_indexer_media.media_indexer"
+        tags:
+            - {name: console.command}
+
+    phlexible_indexer_media.command.find:
+        class: Phlexible\Bundle\IndexerMediaBundle\Command\FindCommand
         arguments:
             - "@phlexible_indexer_media.media_indexer"
         tags:
