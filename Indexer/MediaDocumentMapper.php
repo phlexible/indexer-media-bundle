@@ -92,9 +92,6 @@ class MediaDocumentMapper
         $this->defaultLanguage = $defaultLanguage;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function mapDocument(DocumentInterface $document, MediaDocumentDescriptor $descriptor)
     {
         $document = $this->applyDescriptor($document, $descriptor);
