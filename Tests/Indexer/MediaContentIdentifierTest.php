@@ -43,12 +43,8 @@ class MediaContentIdentifierTest extends TestCase
     public function setUp()
     {
         $this->volumeManager = $this->prophesize(VolumeManager::class);
-        $voter = $this->prophesize(IndexibleVoterInterface::class);
 
-        $this->identifier = new MediaContentIdentifier(
-            $this->volumeManager->reveal(),
-            $voter->reveal()
-        );
+        $this->identifier = new MediaContentIdentifier($this->volumeManager->reveal());
     }
 
     /**

@@ -61,7 +61,7 @@ class FindCommand extends Command
             $output->writeln('    DSN: '.$storage->getConnectionString());
 
             $document = $this->indexer->find($identifier);
-            dump($document);
+            var_dump($document);
         }
 
         return 0;
